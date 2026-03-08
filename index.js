@@ -14,7 +14,6 @@ const BLACK_CHECKER_CLASS = 'black-piece';
 const HIGHLIGHT_CLASS = 'highlight';
 const boardElement = document.getElementById('board');
 
-
 class Checker {
     constructor(color, row, col, direction) {
         this.color = color;
@@ -25,7 +24,14 @@ class Checker {
     }
 }
 
-const boardData = initializeBoardData();
+const CheckersGame = (function() {
+    const boardData = initializeBoardData();
+
+    return {
+        movePiece: function(from, to) {  },
+        getBoard: function() { return boardData; }
+    };
+})();
 
 function initializeBoardData() {
     const data = [];
@@ -59,7 +65,7 @@ function renderBoard() {
     for (let r = 0; r < ROWS_NUM; r++) {
         for (let c = 0; c < COLS_NUM; c++) {
             const cell = createCellElement(r, c);
-            const checkerData = boardData[r][c];
+            const checkerData = CheckersGame.getBoard()[r][c];
 
             if (checkerData) {
                 const checker = createCheckerElement(checkerData);
