@@ -1,3 +1,5 @@
+"use strict";
+
 const ROWS_NUM = 8;
 const COLS_NUM = 8;
 const PIECE_ROWS_COUNT = 3;
