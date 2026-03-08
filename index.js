@@ -17,64 +17,66 @@ const boardElement = document.getElementById('board');
 class Checker {
     constructor(color, row, col, direction) {
         this.color = color;
-        this.row = row;
-        this.col = col;
         this.direction = direction;
         this.isKing = false;
     }
 }
 
-const CheckersGame = (function() {
-    const boardData = initializeBoardData();
+class CheckerGame {
+    #board;
 
-    return {
-        movePiece: function(from, to) {  },
-        getBoard: function() { return boardData; }
-    };
-})();
-
-function initializeBoardData() {
-    const data = [];
-    for (let row = 0; row < ROWS_NUM; row++) {
-        const rowArray = [];
-        for (let col = 0; col < COLS_NUM; col++) {
-            let pieceToCreate = null;
-
-            if (isBlackSquare(row, col)) {
-                if (row < PIECE_ROWS_COUNT) {
-                    pieceToCreate = new Checker(WHITE_PIECE, row, col, 1);
-                } else if (row >= ROWS_NUM - PIECE_ROWS_COUNT) {
-                    pieceToCreate = new Checker(BLACK_PIECE, row, col, -1);
-                }
-            }
-
-            rowArray.push(pieceToCreate);
-        }
-        data.push(rowArray);
+    constructor(boardElement) {
+        this.#board = this.#initializeBoardData();
+        this.boardElement = boardElement;
+        this.#renderBoard();
     }
-    return data;
+
+    movePiece(from, to) {  }
+    getBoard() { return this.#board; }
+
+    #renderBoard() {
+        this.boardElement.innerHTML = '';
+
+        for (let r = 0; r < ROWS_NUM; r++) {
+            for (let c = 0; c < COLS_NUM; c++) {
+                const cell = createCellElement(r, c);
+                const checkerData = this.getBoard()[r][c];
+
+                if (checkerData) {
+                    const checker = createCheckerElement(checkerData);
+                    cell.appendChild(checker);
+                }
+
+                boardElement.appendChild(cell);
+            }
+        }
+    }
+
+    #initializeBoardData() {
+        const data = [];
+        for (let row = 0; row < ROWS_NUM; row++) {
+            const rowArray = [];
+            for (let col = 0; col < COLS_NUM; col++) {
+                let pieceToCreate = null;
+
+                if (isBlackSquare(row, col)) {
+                    if (row < PIECE_ROWS_COUNT) {
+                        pieceToCreate = new Checker(WHITE_PIECE,1);
+                    } else if (row >= ROWS_NUM - PIECE_ROWS_COUNT) {
+                        pieceToCreate = new Checker(BLACK_PIECE, -1);
+                    }
+                }
+
+                rowArray.push(pieceToCreate);
+            }
+            data.push(rowArray);
+        }
+        return data;
+    }
 }
 
 function isBlackSquare(row, col) {
     return (row + col) % 2 !== 0;
-}
-
-function renderBoard() {
-    boardElement.innerHTML = '';
-
-    for (let r = 0; r < ROWS_NUM; r++) {
-        for (let c = 0; c < COLS_NUM; c++) {
-            const cell = createCellElement(r, c);
-            const checkerData = CheckersGame.getBoard()[r][c];
-
-            if (checkerData) {
-                const checker = createCheckerElement(checkerData);
-                cell.appendChild(checker);
-            }
-
-            boardElement.appendChild(cell);
-        }
-    }
 }
 
 function createCellElement(row, col) {
@@ -107,5 +109,4 @@ function toggleHighlight(checker) {
     }
 }
 
-
-renderBoard();
+new CheckerGame(boardElement);
