@@ -11,7 +11,7 @@ const WHITE_CHECKER_CLASS = 'white-piece';
 const BLACK_CHECKER_CLASS = 'black-piece';
 const HIGHLIGHT_CLASS = 'highlight';
 const boardElement = document.getElementById('board');
-const boardData = initializeBoardData();
+
 
 class Checker {
     constructor(color, row, col, direction) {
@@ -22,6 +22,8 @@ class Checker {
         this.isKing = false;
     }
 }
+
+const boardData = initializeBoardData();
 
 function initializeBoardData() {
     const data = [];
