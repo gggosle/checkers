@@ -1,10 +1,9 @@
 const ROWS_NUM = 8;
 const COLS_NUM = 8;
+const PIECE_ROWS_COUNT = 3;
 const BLACK_PIECE = 2;
 const WHITE_PIECE = 1;
 const EMPTY_CELL = 0;
-const WHITE_ROW_END = 2;
-const BLACK_ROW_START = 5;
 const CELL_CLASS = 'cell';
 const BLACK_CELL_CLASS = 'black';
 const WHITE_CELL_CLASS = 'white';
@@ -22,9 +21,9 @@ function initializeBoardData() {
         const rowArray = [];
         for (let col = 0; col < COLS_NUM; col++) {
             if (isBlackSquare(row, col)) {
-                if (row <= WHITE_ROW_END) {
+                if (row < PIECE_ROWS_COUNT) {
                     rowArray.push(WHITE_PIECE);
-                } else if (row >= BLACK_ROW_START) {
+                } else if (row >= ROWS_NUM - PIECE_ROWS_COUNT) {
                     rowArray.push(BLACK_PIECE);
                 } else {
                     rowArray.push(EMPTY_CELL);
