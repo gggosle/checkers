@@ -1,8 +1,7 @@
 :root {
-    --row-count: 8;
-    --col-count: 8;
+    --board-size-cells: 8;
     --cell-size: 60px;
-    --board-size: calc(var(--row-count) * 60px);
+    --board-size: calc(var(--board-size-cells) * 60px);
     --board-border-color: #333;
     --cell-white-bg: #f0d9b5;
     --cell-black-bg: #b58863;
@@ -16,8 +15,8 @@
 
 #board {
     display: grid;
-    grid-template-columns: repeat(8, var(--cell-size));
-    grid-template-rows: repeat(8, var(--cell-size));
+    grid-template-columns: repeat(var(--board-size-cells), var(--cell-size));
+    grid-template-rows: repeat(var(--board-size-cells), var(--cell-size));
     border: 2px solid var(--board-border-color);
     width: var(--board-size);
     height: var(--board-size);
