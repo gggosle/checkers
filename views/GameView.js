@@ -1,14 +1,14 @@
 import { Color } from '../models/Color.js';
 
-export class GameView {
-    static CELL_CLASS = 'cell';
-    static BLACK_CELL_CLASS = 'black';
-    static WHITE_CELL_CLASS = 'white';
-    static CHECKER_CLASS = 'checker';
-    static WHITE_CHECKER_CLASS = 'white-piece';
-    static BLACK_CHECKER_CLASS = 'black-piece';
-    static HIGHLIGHT_CLASS = 'highlight';
+const CELL_CLASS = 'cell';
+const BLACK_CELL_CLASS = 'black';
+const WHITE_CELL_CLASS = 'white';
+const CHECKER_CLASS = 'checker';
+const WHITE_CHECKER_CLASS = 'white-piece';
+const BLACK_CHECKER_CLASS = 'black-piece';
+const HIGHLIGHT_CLASS = 'highlight';
 
+export class GameView {
     #boardElement;
 
     constructor(boardElement) {
@@ -42,28 +42,28 @@ export class GameView {
 
     #createCellElement(row, col, isBlack) {
         const cell = document.createElement('div');
-        cell.classList.add(GameView.CELL_CLASS);
-        cell.classList.add(isBlack ? GameView.BLACK_CELL_CLASS : GameView.WHITE_CELL_CLASS);
+        cell.classList.add(CELL_CLASS);
+        cell.classList.add(isBlack ? BLACK_CELL_CLASS : WHITE_CELL_CLASS);
         return cell;
     }
 
     #createCheckerElement(checkerData) {
         const checker = document.createElement('div');
-        checker.classList.add(GameView.CHECKER_CLASS);
-        checker.classList.add(checkerData.color === Color.WHITE ? GameView.WHITE_CHECKER_CLASS : GameView.BLACK_CHECKER_CLASS); 
+        checker.classList.add(CHECKER_CLASS);
+        checker.classList.add(checkerData.color === Color.WHITE ? WHITE_CHECKER_CLASS : BLACK_CHECKER_CLASS); 
         return checker;
     }
 
     toggleHighlight(checkerElement) {
-        const isAlreadyHighlighted = checkerElement.classList.contains(GameView.HIGHLIGHT_CLASS);
+        const isAlreadyHighlighted = checkerElement.classList.contains(HIGHLIGHT_CLASS);
         this.clearAllHighlights();
 
         if (!isAlreadyHighlighted) {
-            checkerElement.classList.add(GameView.HIGHLIGHT_CLASS);
+            checkerElement.classList.add(HIGHLIGHT_CLASS);
         }
     }
 
     clearAllHighlights() {
-        document.querySelectorAll(`.${GameView.CHECKER_CLASS}`).forEach(c => c.classList.remove(GameView.HIGHLIGHT_CLASS));
+        document.querySelectorAll(`.${CHECKER_CLASS}`).forEach(c => c.classList.remove(HIGHLIGHT_CLASS));
     }
 }
