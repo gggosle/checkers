@@ -1,3 +1,5 @@
+import { Color } from '../models/Color.js';
+
 export class GameView {
     static CELL_CLASS = 'cell';
     static BLACK_CELL_CLASS = 'black';
@@ -48,7 +50,7 @@ export class GameView {
     #createCheckerElement(checkerData) {
         const checker = document.createElement('div');
         checker.classList.add(GameView.CHECKER_CLASS);
-        checker.classList.add(checkerData.color === 1 ? GameView.WHITE_CHECKER_CLASS : GameView.BLACK_CHECKER_CLASS); // Assuming 1 is WHITE_PIECE
+        checker.classList.add(checkerData.color === Color.WHITE ? GameView.WHITE_CHECKER_CLASS : GameView.BLACK_CHECKER_CLASS); 
         return checker;
     }
 

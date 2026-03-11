@@ -1,10 +1,9 @@
 import { Checker } from './Checker.js';
+import { Color } from './Color.js';
 
 export class GameModel {
     static BOARD_SIZE = 8;
     static PIECE_ROWS_COUNT = 3;
-    static BLACK_PIECE = 2;
-    static WHITE_PIECE = 1;
 
     #board;
 
@@ -25,9 +24,9 @@ export class GameModel {
 
                 if (this.isBlackSquare(row, col)) {
                     if (row < GameModel.PIECE_ROWS_COUNT) {
-                        pieceToCreate = new Checker(GameModel.WHITE_PIECE, row, col, 1);
+                        pieceToCreate = new Checker(Color.WHITE, row, col, 1);
                     } else if (row >= GameModel.BOARD_SIZE - GameModel.PIECE_ROWS_COUNT) {
-                        pieceToCreate = new Checker(GameModel.BLACK_PIECE, row, col, -1);
+                        pieceToCreate = new Checker(Color.BLACK, row, col, -1);
                     }
                 }
 
