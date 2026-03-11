@@ -11,6 +11,7 @@
     --checker-black-bg: #333;
     --checker-black-border: #000;
     --highlight-color: #ff0;
+    --valid-move-color: rgba(255, 255, 0, 0.4);
 }
 
 #board {
@@ -60,4 +61,19 @@
 .checker.highlight {
     outline: 3px solid var(--highlight-color);
     box-shadow: 0 0 10px var(--highlight-color);
+}
+
+.cell.valid-move {
+    background-color: var(--valid-move-color);
+    cursor: pointer;
+}
+
+.checker.king::after {
+    content: '♔';
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    font-size: 24px;
+    color: gold;
 }

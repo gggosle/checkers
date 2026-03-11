@@ -1,6 +1,8 @@
 export class GameController {
     #model;
     #view;
+    #selectedChecker = null;
+    #validMoves = [];
 
     constructor(model, view) {
         this.#model = model;
@@ -13,11 +15,75 @@ export class GameController {
         this.#view.render(
             this.#model.getBoard(),
             (row, col) => this.#model.isBlackSquare(row, col),
-            (checkerElement) => this.#handleCheckerClick(checkerElement)
+            (row, col) => this.#handleCheckerClick(row, col),
+            (row, col) => this.#handleCellClick(row, col)
         );
     }
 
-    #handleCheckerClick(checkerElement) {
-        this.#view.toggleHighlight(checkerElement);
+    #handleCheckerClick(row, col) {
+        const piece = this.#model.getPiece(row, col);
+        if (!this.#isOwnPiece(piece)) return;
+
+        if (this.#isMustJumpPieceViolation(row, col)) return;
+
+        if (this.#isToggleDeselect(row, col)) {
+            this.#deselect();
+            return;
+        }
+
+        const validMoves = this.#model.getValidMoves(row, col);
+        if (validMoves.length > 0) {
+            this.#select(row, col, validMoves);
+        }
+    }
+
+    #isOwnPiece(piece) {
+        return piece && piece.color === this.#model.currentTurn;
+    }
+
+    #isMustJumpPieceViolation(row, col) {
+        const mustJumpPiece = this.#model.mustJumpPiece;
+        return mustJumpPiece && (mustJumpPiece.row !== row || mustJumpPiece.col !== col);
+    }
+
+    #isToggleDeselect(row, col) {
+        return this.#selectedChecker?.row === row && 
+               this.#selectedChecker?.col === col && 
+               !this.#model.mustJumpPiece;
+    }
+
+    #deselect() {
+        this.#selectedChecker = null;
+        this.#validMoves = [];
+        this.#init();
+    }
+
+    #select(row, col, validMoves) {
+        this.#selectedChecker = { row, col };
+        this.#validMoves = validMoves;
+        this.#view.highlightMoves(this.#selectedChecker, this.#validMoves);
+    }
+
+    #handleCellClick(row, col) {
+        if (!this.#selectedChecker) return;
+
+        const move = this.#validMoves.find(m => m.row === row && m.col === col);
+        if (!move) return;
+
+        this.#model.executeMove(this.#selectedChecker, move);
+
+        const mustJumpPiece = this.#model.mustJumpPiece;
+        if (mustJumpPiece) {
+            this.#handleMultiJump(mustJumpPiece);
+        } else {
+            this.#deselect();
+        }
+    }
+
+    #handleMultiJump(mustJumpPiece) {
+        this.#selectedChecker = { row: mustJumpPiece.row, col: mustJumpPiece.col };
+        this.#validMoves = this.#model.getValidMoves(mustJumpPiece.row, mustJumpPiece.col);
+        this.#init();
+        this.#view.highlightMoves(this.#selectedChecker, this.#validMoves);
     }
 }

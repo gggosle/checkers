@@ -32,4 +32,13 @@ export class Checker {
     get isKing() {
         return this.#isKing;
     }
+
+    setPosition(row, col) {
+        this.#row = row;
+        this.#col = col;
+    }
+
+    makeKing() {
+        this.#isKing = true;
+    }
 }
