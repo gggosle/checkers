@@ -56,14 +56,14 @@ export class GameView {
 
     toggleHighlight(checkerElement) {
         const isAlreadyHighlighted = checkerElement.classList.contains(HIGHLIGHT_CLASS);
-        this.clearAllHighlights();
+        this.#clearAllHighlights();
 
         if (!isAlreadyHighlighted) {
             checkerElement.classList.add(HIGHLIGHT_CLASS);
         }
     }
 
-    clearAllHighlights() {
+    #clearAllHighlights() {
         document.querySelectorAll(`.${CHECKER_CLASS}`).forEach(c => c.classList.remove(HIGHLIGHT_CLASS));
     }
 }

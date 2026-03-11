@@ -6,10 +6,10 @@ export class GameController {
         this.#model = model;
         this.#view = view;
         
-        this.init();
+        this.#init();
     }
 
-    init() {
+    #init() {
         this.#view.render(
             this.#model.getBoard(),
             (row, col) => this.#model.isBlackSquare(row, col),
