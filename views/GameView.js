@@ -10,12 +10,24 @@ const HIGHLIGHT_CLASS = 'highlight';
 
 export class GameView {
     #boardElement;
+    #onCheckerClick;
 
     constructor(boardElement) {
         this.#boardElement = boardElement;
+        this.#initEvents();
+    }
+
+    #initEvents() {
+        this.#boardElement.addEventListener('click', (e) => {
+            const checkerElement = e.target.closest(`.${CHECKER_CLASS}`);
+            if (checkerElement && this.#onCheckerClick) {
+                this.#onCheckerClick(checkerElement);
+            }
+        });
     }
 
     render(board, isBlackSquareCallback, onCheckerClickCallback) {
+        this.#onCheckerClick = onCheckerClickCallback;
         this.#boardElement.replaceChildren();
 
         const fragment = document.createDocumentFragment();
@@ -27,10 +39,6 @@ export class GameView {
 
                 if (checkerData) {
                     const checkerElement = this.#createCheckerElement(checkerData);
-                    checkerElement.addEventListener('click', (e) => {
-                        onCheckerClickCallback(checkerElement);
-                        e.stopPropagation();
-                    });
                     cell.appendChild(checkerElement);
                 }
                 fragment.appendChild(cell);
