@@ -14,7 +14,9 @@ export class GameView {
     }
 
     render(board, isBlackSquareCallback, onCheckerClickCallback) {
-        this.#boardElement.innerHTML = '';
+        this.#boardElement.replaceChildren();
+
+        const fragment = document.createDocumentFragment();
 
         for (let r = 0; r < board.length; r++) {
             for (let c = 0; c < board[r].length; c++) {
@@ -29,10 +31,11 @@ export class GameView {
                     });
                     cell.appendChild(checkerElement);
                 }
-
-                this.#boardElement.appendChild(cell);
+                fragment.appendChild(cell);
             }
         }
+
+        this.#boardElement.appendChild(fragment);
     }
 
     #createCellElement(row, col, isBlack) {
