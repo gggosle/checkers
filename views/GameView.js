@@ -88,9 +88,6 @@ export class GameView {
     }
 
     #onTransitionEnd(checkerElement, targetCell, onComplete) {
-        checkerElement.style.transition = 'none';
-        checkerElement.style.transform = 'translate(0, 0)';
-        targetCell.appendChild(checkerElement);
         this.#isTransitioning = false;
         if (onComplete) onComplete();
     }
