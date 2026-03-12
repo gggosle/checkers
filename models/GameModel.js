@@ -58,16 +58,35 @@ export class GameModel {
         if (!piece) return [];
 
         const moves = [];
-        const directions = piece.isKing ? [1, -1] : [piece.direction];
-
-        for (const dr of directions) {
-            for (const dc of [1, -1]) {
-                const move = this.#calculateTargetMove(piece, row, col, dr, dc);
-                if (move) moves.push(move);
-            }
-        }
+        this.#forEachPossibleDirection(piece, (dr, dc) => {
+            const move = this.#calculateTargetMove(piece, row, col, dr, dc);
+            if (move) moves.push(move);
+        });
 
         return moves;
+    }
+
+    #hasJumpAvailable(row, col) {
+        const piece = this.getPiece(row, col);
+        if (!piece) return false;
+
+        let hasJump = false;
+        this.#forEachPossibleDirection(piece, (dr, dc) => {
+            if (hasJump) return;
+            const move = this.#calculateTargetMove(piece, row, col, dr, dc);
+            if (move?.type === 'jump') hasJump = true;
+        });
+
+        return hasJump;
+    }
+
+    #forEachPossibleDirection(piece, callback) {
+        const directions = piece.isKing ? [1, -1] : [piece.direction];
+        for (const dr of directions) {
+            for (const dc of [1, -1]) {
+                callback(dr, dc);
+            }
+        }
     }
 
     #calculateTargetMove(piece, row, col, dr, dc) {
@@ -103,8 +122,7 @@ export class GameModel {
             for (let c = 0; c < BOARD_SIZE; c++) {
                 const piece = this.#board[r][c];
                 if (piece && piece.color === this.#currentTurn) {
-                    const moves = this.#calculatePotentialMoves(r, c);
-                    if (moves.some(m => m.type === 'jump')) {
+                    if (this.#hasJumpAvailable(r, c)) {
                         return true;
                     }
                 }
@@ -148,8 +166,7 @@ export class GameModel {
 
     #handlePostMove(piece, toMove, promoted) {
         if (toMove.type === 'jump' && !promoted) {
-            const jumps = this.#calculatePotentialMoves(toMove.row, toMove.col).filter(m => m.type === 'jump');
-            if (jumps.length > 0) {
+            if (this.#hasJumpAvailable(toMove.row, toMove.col)) {
                 this.#mustJumpPiece = { row: toMove.row, col: toMove.col };
                 this.#hasJumpsAvailable = true;
                 return;
