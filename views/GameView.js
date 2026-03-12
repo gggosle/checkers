@@ -14,6 +14,7 @@ export class GameView {
     #boardElement;
     #onCheckerClick;
     #onCellClick;
+    #isTransitioning = false;
 
     constructor(boardElement) {
         this.#boardElement = boardElement;
@@ -22,17 +23,22 @@ export class GameView {
 
     #initEvents() {
         this.#boardElement.addEventListener('click', (e) => {
-            const checkerElement = e.target.closest(`.${CHECKER_CLASS}`);
-            if (checkerElement && this.#onCheckerClick) {
-                this.#handleCheckerClickEvent(checkerElement);
-                return;
-            }
-
-            const cellElement = e.target.closest(`.${CELL_CLASS}`);
-            if (this.#isValidCellClick(cellElement)) {
-                this.#handleCellClickEvent(cellElement);
-            }
+            if (this.#isTransitioning) return;
+            this.#handleBoardClick(e);
         });
+    }
+
+    #handleBoardClick(e) {
+        const checkerElement = e.target.closest(`.${CHECKER_CLASS}`);
+        if (checkerElement && this.#onCheckerClick) {
+            this.#handleCheckerClickEvent(checkerElement);
+            return;
+        }
+
+        const cellElement = e.target.closest(`.${CELL_CLASS}`);
+        if (this.#isValidCellClick(cellElement)) {
+            this.#handleCellClickEvent(cellElement);
+        }
     }
 
     #handleCheckerClickEvent(checkerElement) {
@@ -48,7 +54,45 @@ export class GameView {
     #handleCellClickEvent(cellElement) {
         const row = parseInt(cellElement.dataset.row);
         const col = parseInt(cellElement.dataset.col);
-        this.#onCellClick(row, col);
+        
+        const checkerElement = document.querySelector(`.${HIGHLIGHT_CLASS}`);
+        if (checkerElement && checkerElement.classList.contains(CHECKER_CLASS)) {
+            this.#animatePieceMove(checkerElement, cellElement, () => {
+                this.#onCellClick(row, col);
+            });
+        } else {
+            this.#onCellClick(row, col);
+        }
+    }
+
+    #animatePieceMove(checkerElement, targetCell, onComplete) {
+        this.#isTransitioning = true;
+        const delta = this.#calculateDelta(checkerElement, targetCell);
+        
+        checkerElement.style.transition = 'transform 0.4s ease-in-out';
+        checkerElement.style.transform = `translate(${delta.x}px, ${delta.y}px)`;
+        
+        checkerElement.addEventListener('transitionend', () => {
+            this.#onTransitionEnd(checkerElement, targetCell, onComplete);
+        }, { once: true });
+    }
+
+    #calculateDelta(checkerElement, targetCell) {
+        const startRect = checkerElement.getBoundingClientRect();
+        const endRect = targetCell.getBoundingClientRect();
+        
+        return {
+            x: (endRect.left + endRect.width / 2) - (startRect.left + startRect.width / 2),
+            y: (endRect.top + endRect.height / 2) - (startRect.top + startRect.height / 2)
+        };
+    }
+
+    #onTransitionEnd(checkerElement, targetCell, onComplete) {
+        checkerElement.style.transition = 'none';
+        checkerElement.style.transform = 'translate(0, 0)';
+        targetCell.appendChild(checkerElement);
+        this.#isTransitioning = false;
+        if (onComplete) onComplete();
     }
 
     render(board, isBlackSquareCallback, onCheckerClickCallback, onCellClickCallback) {
