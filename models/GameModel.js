@@ -1,5 +1,6 @@
 import { Checker } from './Checker.js';
 import { Color } from './Color.js';
+import { MoveType } from './MoveType.js';
 
 const BOARD_SIZE = 8;
 const PIECE_ROWS_COUNT = 3;
@@ -47,7 +48,7 @@ export class GameModel {
         const moves = this.#calculatePotentialMoves(row, col);
 
         if (this.#hasJumpsAvailable) {
-            return moves.filter(m => m.type === 'jump');
+            return moves.filter(m => m.type === MoveType.JUMP);
         }
 
         return moves;
@@ -74,7 +75,7 @@ export class GameModel {
         this.#forEachPossibleDirection(piece, (dr, dc) => {
             if (hasJump) return;
             const move = this.#calculateTargetMove(piece, row, col, dr, dc);
-            if (move?.type === 'jump') hasJump = true;
+            if (move?.type === MoveType.JUMP) hasJump = true;
         });
 
         return hasJump;
@@ -95,7 +96,7 @@ export class GameModel {
         if (!this.#isInBounds(targetRow, targetCol)) return null;
 
         const targetPiece = this.#board[targetRow][targetCol];
-        if (!targetPiece) return { row: targetRow, col: targetCol, type: 'move' };
+        if (!targetPiece) return { row: targetRow, col: targetCol, type: MoveType.MOVE };
 
         return this.#tryCalculateJump(piece, targetPiece, dr, dc);
     }
@@ -110,7 +111,7 @@ export class GameModel {
             return {
                 row: jumpRow,
                 col: jumpCol,
-                type: 'jump',
+                type: MoveType.JUMP,
                 captured: { row: targetPiece.row, col: targetPiece.col }
             };
         }
@@ -136,7 +137,7 @@ export class GameModel {
         if (!piece) return false;
 
         this.#movePiece(piece, from, toMove);
-        if (toMove.type === 'jump') {
+        if (toMove.type === MoveType.JUMP) {
             this.#capturePiece(toMove.captured);
         }
 
@@ -165,7 +166,7 @@ export class GameModel {
     }
 
     #handlePostMove(piece, toMove, promoted) {
-        if (toMove.type === 'jump' && !promoted) {
+        if (toMove.type === MoveType.JUMP && !promoted) {
             if (this.#hasJumpAvailable(toMove.row, toMove.col)) {
                 this.#mustJumpPiece = { row: toMove.row, col: toMove.col };
                 this.#hasJumpsAvailable = true;
