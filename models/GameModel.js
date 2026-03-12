@@ -14,7 +14,7 @@ export class GameModel {
 
     constructor() {
         this.#board = this.#initializeBoardData();
-        this.#currentTurn = Color.BLACK;
+        this.#currentTurn = Color.WHITE;
         this.#mustJumpPiece = null;
         this.#hasJumpsAvailable = false;
     }
