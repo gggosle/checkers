@@ -10,11 +10,13 @@ export class GameModel {
     #board;
     #currentTurn;
     #mustJumpPiece;
+    #hasJumpsAvailable;
 
     constructor() {
         this.#board = this.#initializeBoardData();
         this.#currentTurn = Color.BLACK;
         this.#mustJumpPiece = null;
+        this.#hasJumpsAvailable = false;
     }
 
     get currentTurn() {
@@ -44,8 +46,7 @@ export class GameModel {
 
         const moves = this.#calculatePotentialMoves(row, col);
 
-        const playerHasJumps = this.#anyPlayerJumpsAvailable();
-        if (playerHasJumps) {
+        if (this.#hasJumpsAvailable) {
             return moves.filter(m => m.type === 'jump');
         }
 
@@ -98,8 +99,6 @@ export class GameModel {
     }
 
     #anyPlayerJumpsAvailable() {
-        if (this.#mustJumpPiece) return true;
-
         for (let r = 0; r < BOARD_SIZE; r++) {
             for (let c = 0; c < BOARD_SIZE; c++) {
                 const piece = this.#board[r][c];
@@ -152,6 +151,7 @@ export class GameModel {
             const jumps = this.#calculatePotentialMoves(toMove.row, toMove.col).filter(m => m.type === 'jump');
             if (jumps.length > 0) {
                 this.#mustJumpPiece = { row: toMove.row, col: toMove.col };
+                this.#hasJumpsAvailable = true;
                 return;
             }
         }
@@ -162,6 +162,7 @@ export class GameModel {
 
     #switchTurn() {
         this.#currentTurn = this.#currentTurn === Color.WHITE ? Color.BLACK : Color.WHITE;
+        this.#hasJumpsAvailable = this.#anyPlayerJumpsAvailable();
     }
 
     #isInBounds(row, col) {
