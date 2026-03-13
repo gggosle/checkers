@@ -41,4 +41,10 @@ export class Checker {
     makeKing() {
         this.#isKing = true;
     }
+
+    clone() {
+        const cloned = new Checker(this.#color, this.#row, this.#col, this.#direction);
+        if (this.#isKing) cloned.makeKing();
+        return cloned;
+    }
 }

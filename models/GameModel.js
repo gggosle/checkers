@@ -29,7 +29,7 @@ export class GameModel {
     }
 
     getBoard() {
-        return this.#board;
+        return this.#board.map(row => row.map(cell => cell ? cell.clone() : null));
     }
 
     getPiece(row, col) {
