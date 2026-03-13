@@ -1,14 +1,6 @@
 import { Color } from '../models/Color.js';
 
-const CELL_CLASS = 'cell';
-const BLACK_CELL_CLASS = 'black';
-const WHITE_CELL_CLASS = 'white';
-const CHECKER_CLASS = 'checker';
-const WHITE_CHECKER_CLASS = 'white-piece';
-const BLACK_CHECKER_CLASS = 'black-piece';
-const KING_CLASS = 'king';
-const HIGHLIGHT_CLASS = 'highlight';
-const VALID_MOVE_CLASS = 'valid-move';
+
 
 export class GameView {
     #boardElement;

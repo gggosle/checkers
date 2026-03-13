@@ -13,7 +13,7 @@ export class GameController {
 
     #init() {
         this.#view.render(
-            this.#model.getBoard(),
+            this.#model.getBoardClone(),
             (row, col) => this.#model.isBlackSquare(row, col),
             (row, col) => this.#handleCheckerClick(row, col),
             (row, col) => this.#handleCellClick(row, col)

@@ -1,11 +1,6 @@
-import { Checker } from './Checker.js';
 import { Color } from './Color.js';
 import { MoveType } from './MoveType.js';
-
-const BOARD_SIZE = 8;
-const PIECE_ROWS_COUNT = 3;
-const MOVE_DIR_UP = 1;
-const MOVE_DIR_DOWN = -1;
+import { Board } from './Board.js';
 
 export class GameModel {
     #board;
@@ -14,7 +9,7 @@ export class GameModel {
     #hasJumpsAvailable;
 
     constructor() {
-        this.#board = this.#initializeBoardData();
+        this.#board = new Board();
         this.#currentTurn = Color.WHITE;
         this.#mustJumpPiece = null;
         this.#hasJumpsAvailable = false;
@@ -28,17 +23,8 @@ export class GameModel {
         return this.#mustJumpPiece;
     }
 
-    getBoard() {
-        return this.#board.map(row => row.map(cell => cell ? cell.clone() : null));
-    }
-
-    getPiece(row, col) {
-        if (!this.#isInBounds(row, col)) return null;
-        return this.#board[row][col];
-    }
-
     getValidMoves(row, col) {
-        const piece = this.getPiece(row, col);
+        const piece = this.#board.getPiece(row, col);
         if (!piece || piece.color !== this.#currentTurn) return [];
 
         if (this.#mustJumpPiece && (this.#mustJumpPiece.row !== row || this.#mustJumpPiece.col !== col)) {
@@ -55,7 +41,7 @@ export class GameModel {
     }
 
     #calculatePotentialMoves(row, col) {
-        const piece = this.getPiece(row, col);
+        const piece = this.#board.getPiece(row, col);
         if (!piece) return [];
 
         const moves = [];
@@ -68,7 +54,7 @@ export class GameModel {
     }
 
     #hasJumpAvailable(row, col) {
-        const piece = this.getPiece(row, col);
+        const piece = this.#board.getPiece(row, col);
         if (!piece) return false;
 
         let hasJump = false;
@@ -93,9 +79,9 @@ export class GameModel {
     #calculateTargetMove(piece, row, col, dr, dc) {
         const targetRow = row + dr;
         const targetCol = col + dc;
-        if (!this.#isInBounds(targetRow, targetCol)) return null;
+        if (this.#board.isInBounds(targetRow, targetCol)) return null;
 
-        const targetPiece = this.#board[targetRow][targetCol];
+        const targetPiece = this.#board.getPiece(targetRow, targetCol);
         if (!targetPiece) return { row: targetRow, col: targetCol, type: MoveType.MOVE };
 
         return this.#tryCalculateJump(piece, targetPiece, dr, dc);
@@ -107,7 +93,7 @@ export class GameModel {
         const jumpRow = targetPiece.row + dr;
         const jumpCol = targetPiece.col + dc;
 
-        if (this.#isInBounds(jumpRow, jumpCol) && !this.#board[jumpRow][jumpCol]) {
+        if (this.#board.isInBounds(jumpRow, jumpCol) && !this.#board[jumpRow][jumpCol]) {
             return {
                 row: jumpRow,
                 col: jumpCol,
@@ -133,27 +119,17 @@ export class GameModel {
     }
 
     executeMove(from, toMove) {
-        const piece = this.getPiece(from.row, from.col);
+        const piece = this.#board.getPiece(from.row, from.col);
         if (!piece) return false;
 
-        this.#movePiece(piece, from, toMove);
+        this.#board.movePiece(piece, from, toMove);
         if (toMove.type === MoveType.JUMP) {
-            this.#capturePiece(toMove.captured);
+            this.#board.removePiece(toMove.captured);
         }
 
         const promoted = this.#checkPromotion(piece, toMove.row);
         this.#handlePostMove(piece, toMove, promoted);
         return true;
-    }
-
-    #movePiece(piece, from, to) {
-        this.#board[from.row][from.col] = null;
-        this.#board[to.row][to.col] = piece;
-        piece.setPosition(to.row, to.col);
-    }
-
-    #capturePiece(capturedPos) {
-        this.#board[capturedPos.row][capturedPos.col] = null;
     }
 
     #checkPromotion(piece, row) {
@@ -183,38 +159,4 @@ export class GameModel {
         this.#hasJumpsAvailable = this.#anyPlayerJumpsAvailable();
     }
 
-    #isInBounds(row, col) {
-        return row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE;
-    }
-
-    #initializeBoardData() {
-        const data = [];
-        for (let row = 0; row < BOARD_SIZE; row++) {
-            data.push(this.#createRow(row));
-        }
-        return data;
-    }
-
-    #createRow(row) {
-        const rowArray = [];
-        for (let col = 0; col < BOARD_SIZE; col++) {
-            rowArray.push(this.#createPiece(row, col));
-        }
-        return rowArray;
-    }
-
-    #createPiece(row, col) {
-        if (!this.isBlackSquare(row, col)) return null;
-
-        if (row < PIECE_ROWS_COUNT) {
-            return new Checker(Color.WHITE, row, col, MOVE_DIR_UP);
-        } else if (row >= BOARD_SIZE - PIECE_ROWS_COUNT) {
-            return new Checker(Color.BLACK, row, col, MOVE_DIR_DOWN);
-        }
-        return null;
-    }
-
-    isBlackSquare(row, col) {
-        return (row + col) % 2 !== 0;
-    }
 }
