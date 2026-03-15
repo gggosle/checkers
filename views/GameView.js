@@ -68,11 +68,13 @@ export class GameView {
         
         checkerElement.style.transition = 'transform 0.4s ease-in-out';
         checkerElement.style.transform = `translate(${delta.x}px, ${delta.y}px)`;
+        checkerElement.style.zIndex = '100';
         
         checkerElement.addEventListener('transitionend', () => {
             this.#isTransitioning = false;
             checkerElement.style.transition = '';
             checkerElement.style.transform = '';
+            checkerElement.style.zIndex = '';
             if (onComplete) onComplete();
         }, { once: true });
     }
