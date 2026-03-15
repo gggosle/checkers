@@ -20,8 +20,12 @@ export class GameModel {
         return this.#board.getBoardClone();
     }
     
+    getPiece(row, col) {
+        return this.#board.getPiece(row, col);
+    }
+    
     isBlackSquare(row, col) {
-        Board.isBlackSquare(row, col);
+        return Board.isBlackSquare(row, col);
     }
 
     get currentTurn() {
@@ -88,7 +92,7 @@ export class GameModel {
     #calculateTargetMove(piece, row, col, dr, dc) {
         const targetRow = row + dr;
         const targetCol = col + dc;
-        if (this.#board.isInBounds(targetRow, targetCol)) return null;
+        if (!this.#board.isInBounds(targetRow, targetCol)) return null;
 
         const targetPiece = this.#board.getPiece(targetRow, targetCol);
         if (!targetPiece) return {row: targetRow, col: targetCol, type: MoveType.MOVE};
@@ -102,7 +106,7 @@ export class GameModel {
         const jumpRow = targetPiece.row + dr;
         const jumpCol = targetPiece.col + dc;
 
-        if (this.#board.isInBounds(jumpRow, jumpCol) && !this.#board[jumpRow][jumpCol]) {
+        if (this.#board.isInBounds(jumpRow, jumpCol) && !this.#board.getPiece(jumpRow, jumpCol)) {
             return {
                 row: jumpRow,
                 col: jumpCol,
@@ -116,7 +120,7 @@ export class GameModel {
     #anyPlayerJumpsAvailable() {
         for (let r = 0; r < GAME_CONFIG.BOARD_SIZE; r++) {
             for (let c = 0; c < GAME_CONFIG.BOARD_SIZE; c++) {
-                const piece = this.#board[r][c];
+                const piece = this.#board.getPiece(r, c);
                 if (piece && piece.color === this.#currentTurn) {
                     if (this.#hasJumpAvailable(r, c)) {
                         return true;

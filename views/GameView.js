@@ -121,7 +121,7 @@ export class GameView {
 
     #createCheckerElement(checkerData) {
         const checker = document.createElement('div');
-        checker.classList.add(CSS_CLASSES.WHITE_CELL_CLASS);
+        checker.classList.add(CSS_CLASSES.CHECKER_CLASS);
         checker.classList.add(checkerData.color === Color.WHITE ? CSS_CLASSES.WHITE_CHECKER_CLASS : CSS_CLASSES.BLACK_CHECKER_CLASS);
         if (checkerData.isKing) {
             checker.classList.add(CSS_CLASSES.KING_CLASS);
@@ -132,7 +132,7 @@ export class GameView {
     highlightMoves(checkerCoords, validMoves) {
         this.#clearAllHighlights();
         
-        const checkerElement = document.querySelector(`.cell[data-row="${checkerCoords.row}"][data-col="${checkerCoords.col}"] .${CHECKER_CLASS}`);
+        const checkerElement = document.querySelector(`.cell[data-row="${checkerCoords.row}"][data-col="${checkerCoords.col}"] .${CSS_CLASSES.CHECKER_CLASS}`);
         if (checkerElement) {
             checkerElement.classList.add(CSS_CLASSES.HIGHLIGHT_CLASS);
         }
