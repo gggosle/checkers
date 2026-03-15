@@ -1,14 +1,6 @@
 import { Color } from '../models/Color.js';
+import {CSS_CLASSES} from "../constants.js";
 
-const CELL_CLASS = 'cell';
-const BLACK_CELL_CLASS = 'black';
-const WHITE_CELL_CLASS = 'white';
-const CHECKER_CLASS = 'checker';
-const WHITE_CHECKER_CLASS = 'white-piece';
-const BLACK_CHECKER_CLASS = 'black-piece';
-const KING_CLASS = 'king';
-const HIGHLIGHT_CLASS = 'highlight';
-const VALID_MOVE_CLASS = 'valid-move';
 
 export class GameView {
     #boardElement;
@@ -29,13 +21,13 @@ export class GameView {
     }
 
     #handleBoardClick(e) {
-        const checkerElement = e.target.closest(`.${CHECKER_CLASS}`);
+        const checkerElement = e.target.closest(`.${CSS_CLASSES.CHECKER_CLASS}`);
         if (checkerElement && this.#onCheckerClick) {
             this.#handleCheckerClickEvent(checkerElement);
             return;
         }
 
-        const cellElement = e.target.closest(`.${CELL_CLASS}`);
+        const cellElement = e.target.closest(`.${CSS_CLASSES.CELL_CLASS}`);
         if (this.#isValidCellClick(cellElement)) {
             this.#handleCellClickEvent(cellElement);
         }
@@ -48,15 +40,15 @@ export class GameView {
     }
 
     #isValidCellClick(cellElement) {
-        return cellElement && this.#onCellClick && cellElement.classList.contains(VALID_MOVE_CLASS);
+        return cellElement && this.#onCellClick && cellElement.classList.contains(CSS_CLASSES.VALID_MOVE_CLASS);
     }
 
     #handleCellClickEvent(cellElement) {
         const row = parseInt(cellElement.dataset.row);
         const col = parseInt(cellElement.dataset.col);
         
-        const checkerElement = document.querySelector(`.${HIGHLIGHT_CLASS}`);
-        if (checkerElement && checkerElement.classList.contains(CHECKER_CLASS)) {
+        const checkerElement = document.querySelector(`.${CSS_CLASSES.HIGHLIGHT_CLASS}`);
+        if (checkerElement && checkerElement.classList.contains(CSS_CLASSES.CHECKER_CLASS)) {
             this.#animatePieceMove(checkerElement, cellElement, () => {
                 this.#onCellClick(row, col);
             });
@@ -120,8 +112,8 @@ export class GameView {
 
     #createCellElement(row, col, isBlack) {
         const cell = document.createElement('div');
-        cell.classList.add(CELL_CLASS);
-        cell.classList.add(isBlack ? BLACK_CELL_CLASS : WHITE_CELL_CLASS);
+        cell.classList.add(CSS_CLASSES.CELL_CLASS);
+        cell.classList.add(isBlack ? CSS_CLASSES.BLACK_CELL_CLASS : CSS_CLASSES.WHITE_CELL_CLASS);
         cell.dataset.row = row;
         cell.dataset.col = col;
         return cell;
@@ -129,10 +121,10 @@ export class GameView {
 
     #createCheckerElement(checkerData) {
         const checker = document.createElement('div');
-        checker.classList.add(CHECKER_CLASS);
-        checker.classList.add(checkerData.color === Color.WHITE ? WHITE_CHECKER_CLASS : BLACK_CHECKER_CLASS); 
+        checker.classList.add(CSS_CLASSES.CHECKER_CLASS);
+        checker.classList.add(checkerData.color === Color.WHITE ? CSS_CLASSES.WHITE_CHECKER_CLASS : CSS_CLASSES.BLACK_CHECKER_CLASS);
         if (checkerData.isKing) {
-            checker.classList.add(KING_CLASS);
+            checker.classList.add(CSS_CLASSES.KING_CLASS);
         }
         return checker;
     }
@@ -140,21 +132,21 @@ export class GameView {
     highlightMoves(checkerCoords, validMoves) {
         this.#clearAllHighlights();
         
-        const checkerElement = document.querySelector(`.cell[data-row="${checkerCoords.row}"][data-col="${checkerCoords.col}"] .${CHECKER_CLASS}`);
+        const checkerElement = document.querySelector(`.cell[data-row="${checkerCoords.row}"][data-col="${checkerCoords.col}"] .${CSS_CLASSES.CHECKER_CLASS}`);
         if (checkerElement) {
-            checkerElement.classList.add(HIGHLIGHT_CLASS);
+            checkerElement.classList.add(CSS_CLASSES.HIGHLIGHT_CLASS);
         }
 
         validMoves.forEach(move => {
             const cellElement = document.querySelector(`.cell[data-row="${move.row}"][data-col="${move.col}"]`);
             if (cellElement) {
-                cellElement.classList.add(VALID_MOVE_CLASS);
+                cellElement.classList.add(CSS_CLASSES.VALID_MOVE_CLASS);
             }
         });
     }
 
     #clearAllHighlights() {
-        document.querySelectorAll(`.${HIGHLIGHT_CLASS}`).forEach(c => c.classList.remove(HIGHLIGHT_CLASS));
-        document.querySelectorAll(`.${VALID_MOVE_CLASS}`).forEach(c => c.classList.remove(VALID_MOVE_CLASS));
+        document.querySelectorAll(`.${CSS_CLASSES.HIGHLIGHT_CLASS}`).forEach(c => c.classList.remove(CSS_CLASSES.HIGHLIGHT_CLASS));
+        document.querySelectorAll(`.${CSS_CLASSES.VALID_MOVE_CLASS}`).forEach(c => c.classList.remove(CSS_CLASSES.VALID_MOVE_CLASS));
     }
 }
