@@ -1,6 +1,7 @@
-import { Checker } from './Checker.js';
-import { Color } from './Color.js';
-
+import {Checker} from './Checker.js';
+import {Color} from './Color.js';
+import {GAME_CONFIG} from "../constants.js";
+import {GAME_RULES} from "../constants.js";
 
 
 export class Board {
@@ -18,6 +19,7 @@ export class Board {
         if (!this.isInBounds(row, col)) return null;
         return this.#board[row][col];
     }
+
     movePiece(piece, from, to) {
         this.#board[from.row][from.col] = null;
         this.#board[to.row][to.col] = piece;
@@ -29,7 +31,7 @@ export class Board {
     }
 
     checkPromotion(piece, row) {
-        if (!piece.isKing && ((piece.color === Color.WHITE && row === BOARD_SIZE - 1) ||
+        if (!piece.isKing && ((piece.color === Color.WHITE && row === GAME_CONFIG.BOARD_SIZE - 1) ||
             (piece.color === Color.BLACK && row === 0))) {
             piece.makeKing();
             return true;
@@ -38,12 +40,12 @@ export class Board {
     }
 
     isInBounds(row, col) {
-        return row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE;
+        return row >= 0 && row < GAME_CONFIG.BOARD_SIZE && col >= 0 && col < GAME_CONFIG.BOARD_SIZE;
     }
 
     #initializeBoardData() {
         const data = [];
-        for (let row = 0; row < BOARD_SIZE; row++) {
+        for (let row = 0; row < GAME_CONFIG.BOARD_SIZE; row++) {
             data.push(this.#createRow(row));
         }
         return data;
@@ -51,24 +53,24 @@ export class Board {
 
     #createRow(row) {
         const rowArray = [];
-        for (let col = 0; col < BOARD_SIZE; col++) {
+        for (let col = 0; col < GAME_CONFIG.BOARD_SIZE; col++) {
             rowArray.push(this.#createPiece(row, col));
         }
         return rowArray;
     }
 
     #createPiece(row, col) {
-        if (!this.isBlackSquare(row, col)) return null;
+        if (!Board.isBlackSquare(row, col)) return null;
 
-        if (row < PIECE_ROWS_COUNT) {
-            return new Checker(Color.WHITE, row, col, MOVE_DIR_UP);
-        } else if (row >= BOARD_SIZE - PIECE_ROWS_COUNT) {
-            return new Checker(Color.BLACK, row, col, MOVE_DIR_DOWN);
+        if (row < GAME_RULES.PIECE_ROWS_COUNT) {
+            return new Checker(Color.WHITE, row, col, GAME_RULES.MOVE_DIR_UP);
+        } else if (row >= GAME_CONFIG.BOARD_SIZE - GAME_RULES.PIECE_ROWS_COUNT) {
+            return new Checker(Color.BLACK, row, col, GAME_RULES.MOVE_DIR_DOWN);
         }
         return null;
     }
 
-    isBlackSquare(row, col) {
+    static isBlackSquare(row, col) {
         return (row + col) % 2 !== 0;
     }
 }

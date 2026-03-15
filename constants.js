@@ -1,7 +1,5 @@
 export const GAME_CONFIG = {
     BOARD_SIZE: 8,
-
-
 };
 
 export const GAME_RULES = {

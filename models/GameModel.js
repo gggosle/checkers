@@ -1,6 +1,7 @@
-import { Color } from './Color.js';
-import { MoveType } from './MoveType.js';
-import { Board } from './Board.js';
+import {Color} from './Color.js';
+import {MoveType} from './MoveType.js';
+import {Board} from './Board.js';
+import {GAME_CONFIG} from "../constants.js";
 
 export class GameModel {
     #board;
@@ -13,6 +14,14 @@ export class GameModel {
         this.#currentTurn = Color.WHITE;
         this.#mustJumpPiece = null;
         this.#hasJumpsAvailable = false;
+    }
+    
+    get boardClone() {
+        return this.#board.getBoardClone();
+    }
+    
+    isBlackSquare(row, col) {
+        Board.isBlackSquare(row, col);
     }
 
     get currentTurn() {
@@ -82,7 +91,7 @@ export class GameModel {
         if (this.#board.isInBounds(targetRow, targetCol)) return null;
 
         const targetPiece = this.#board.getPiece(targetRow, targetCol);
-        if (!targetPiece) return { row: targetRow, col: targetCol, type: MoveType.MOVE };
+        if (!targetPiece) return {row: targetRow, col: targetCol, type: MoveType.MOVE};
 
         return this.#tryCalculateJump(piece, targetPiece, dr, dc);
     }
@@ -98,15 +107,15 @@ export class GameModel {
                 row: jumpRow,
                 col: jumpCol,
                 type: MoveType.JUMP,
-                captured: { row: targetPiece.row, col: targetPiece.col }
+                captured: {row: targetPiece.row, col: targetPiece.col}
             };
         }
         return null;
     }
 
     #anyPlayerJumpsAvailable() {
-        for (let r = 0; r < BOARD_SIZE; r++) {
-            for (let c = 0; c < BOARD_SIZE; c++) {
+        for (let r = 0; r < GAME_CONFIG.BOARD_SIZE; r++) {
+            for (let c = 0; c < GAME_CONFIG.BOARD_SIZE; c++) {
                 const piece = this.#board[r][c];
                 if (piece && piece.color === this.#currentTurn) {
                     if (this.#hasJumpAvailable(r, c)) {
@@ -133,7 +142,7 @@ export class GameModel {
     }
 
     #checkPromotion(piece, row) {
-        if (!piece.isKing && ((piece.color === Color.WHITE && row === BOARD_SIZE - 1) ||
+        if (!piece.isKing && ((piece.color === Color.WHITE && row === GAME_CONFIG.BOARD_SIZE - 1) ||
             (piece.color === Color.BLACK && row === 0))) {
             piece.makeKing();
             return true;
@@ -144,7 +153,7 @@ export class GameModel {
     #handlePostMove(piece, toMove, promoted) {
         if (toMove.type === MoveType.JUMP && !promoted) {
             if (this.#hasJumpAvailable(toMove.row, toMove.col)) {
-                this.#mustJumpPiece = { row: toMove.row, col: toMove.col };
+                this.#mustJumpPiece = {row: toMove.row, col: toMove.col};
                 this.#hasJumpsAvailable = true;
                 return;
             }
