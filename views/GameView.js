@@ -50,7 +50,7 @@ export class GameView {
         
         const checkerElement = document.querySelector(`.${CSS_CLASSES.HIGHLIGHT_CLASS}`);
         if (checkerElement && checkerElement.classList.contains(CSS_CLASSES.CHECKER_CLASS)) {
-            this.#animatePieceMove(checkerElement, cellElement, () => {
+            this.animatePieceMove(checkerElement, cellElement, () => {
                 this.#onCellClick(row, col);
             });
         } else {
@@ -58,7 +58,11 @@ export class GameView {
         }
     }
 
-    #animatePieceMove(checkerElement, targetCell, onComplete) {
+    animatePieceMove(checkerElement, targetCell, onComplete) {
+        this.#animate(checkerElement, targetCell, onComplete);
+    }
+
+    #animate(checkerElement, targetCell, onComplete) {
         this.#isTransitioning = true;
         const delta = this.#calculateDelta(checkerElement, targetCell);
         
@@ -66,7 +70,10 @@ export class GameView {
         checkerElement.style.transform = `translate(${delta.x}px, ${delta.y}px)`;
         
         checkerElement.addEventListener('transitionend', () => {
-            this.#onTransitionEnd(checkerElement, targetCell, onComplete);
+            this.#isTransitioning = false;
+            checkerElement.style.transition = '';
+            checkerElement.style.transform = '';
+            if (onComplete) onComplete();
         }, { once: true });
     }
 
@@ -80,10 +87,6 @@ export class GameView {
         };
     }
 
-    #onTransitionEnd(checkerElement, targetCell, onComplete) {
-        this.#isTransitioning = false;
-        if (onComplete) onComplete();
-    }
 
     render(board, isBlackSquareCallback, onCheckerClickCallback, onCellClickCallback) {
         this.#onCheckerClick = onCheckerClickCallback;
@@ -152,33 +155,14 @@ export class GameView {
     }
 
     animateUndoMove(from, to, onComplete) {
-        this.#isTransitioning = true;
-        
         const checkerElement = document.querySelector(`.cell[data-row="${to.row}"][data-col="${to.col}"] .${CSS_CLASSES.CHECKER_CLASS}`);
-        if (!checkerElement) {
-            this.#isTransitioning = false;
-            if (onComplete) onComplete();
-            return;
-        }
-
         const targetCell = document.querySelector(`.cell[data-row="${from.row}"][data-col="${from.col}"]`);
-        if (!targetCell) {
-            this.#isTransitioning = false;
+        
+        if (!checkerElement || !targetCell) {
             if (onComplete) onComplete();
             return;
         }
 
-        const delta = this.#calculateDelta(checkerElement, targetCell);
-        
-        checkerElement.style.transition = 'transform 0.4s ease-in-out';
-        checkerElement.style.transform = `translate(${delta.x}px, ${delta.y}px)`;
-        
-        checkerElement.addEventListener('transitionend', () => {
-            this.#isTransitioning = false;
-            checkerElement.style.transition = '';
-            checkerElement.style.transform = '';
-            
-            if (onComplete) onComplete();
-        }, { once: true });
+        this.#animate(checkerElement, targetCell, onComplete);
     }
 }

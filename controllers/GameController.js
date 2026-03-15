@@ -80,26 +80,33 @@ export class GameController {
         const move = this.#validMoves.find(m => m.row === row && m.col === col);
         if (!move) return;
 
-        if (!this.#gameEnded) {
-            this.#prevState = this.#model.captureState();
-            this.#lastMove = {
-                from: {row: this.#selectedChecker.row, col: this.#selectedChecker.col},
-                to: {row: move.row, col: move.col},
-                captured: move.captured ? {...move.captured} : null
-            };
-            this.#notifyUndoStateChange();
-        }
-
+        this.#recordMoveState(move);
         this.#model.executeMove(this.#selectedChecker, move);
+        this.#processMoveResult();
+        this.#checkWinCondition();
+    }
 
+    #recordMoveState(move) {
+        if (this.#gameEnded) return;
+
+        this.#prevState = this.#model.captureState();
+        this.#lastMove = {
+            from: {row: this.#selectedChecker.row, col: this.#selectedChecker.col},
+            to: {row: move.row, col: move.col},
+            captured: move.captured ? {...move.captured} : null
+        };
+        this.#notifyUndoStateChange();
+    }
+
+    #processMoveResult() {
         const mustJumpPiece = this.#model.mustJumpPiece;
         this.#init();
+
         if (mustJumpPiece) {
             this.#handleMultiJump(mustJumpPiece);
         } else {
             this.#deselect();
         }
-        this.#checkWinCondition();
     }
 
     #checkWinCondition() {
