@@ -26,7 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const undoBtn = document.getElementById('undo-btn');
     if (undoBtn) {
-        undoBtn.disabled = true;
         controller.setOnUndoStateChange((canUndo) => {
             undoBtn.disabled = !canUndo;
         });
