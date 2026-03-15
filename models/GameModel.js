@@ -181,4 +181,20 @@ export class GameModel {
         }
         return false;
     }
+
+    captureState() {
+        return {
+            board: this.#board.getBoardClone(),
+            currentTurnDir: this.#currentTurnDir,
+            mustJumpPiece: this.#mustJumpPiece ? {...this.#mustJumpPiece} : null,
+            hasJumpsAvailable: this.#hasJumpsAvailable
+        };
+    }
+
+    restoreState(state) {
+        this.#board.restoreBoard(state.board);
+        this.#currentTurnDir = state.currentTurnDir;
+        this.#mustJumpPiece = state.mustJumpPiece;
+        this.#hasJumpsAvailable = state.hasJumpsAvailable;
+    }
 }

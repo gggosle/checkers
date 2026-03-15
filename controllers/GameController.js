@@ -5,12 +5,20 @@ export class GameController {
     #view;
     #selectedChecker = null;
     #validMoves = [];
+    #prevState = null;
+    #lastMove = null;
+    #gameEnded = false;
+    #onUndoStateChange = null;
 
     constructor(model, view) {
         this.#model = model;
         this.#view = view;
 
         this.#init();
+    }
+
+    setOnUndoStateChange(callback) {
+        this.#onUndoStateChange = callback;
     }
 
     #init() {
@@ -72,6 +80,16 @@ export class GameController {
         const move = this.#validMoves.find(m => m.row === row && m.col === col);
         if (!move) return;
 
+        if (!this.#gameEnded) {
+            this.#prevState = this.#model.captureState();
+            this.#lastMove = {
+                from: {row: this.#selectedChecker.row, col: this.#selectedChecker.col},
+                to: {row: move.row, col: move.col},
+                captured: move.captured ? {...move.captured} : null
+            };
+            this.#notifyUndoStateChange();
+        }
+
         this.#model.executeMove(this.#selectedChecker, move);
 
         const mustJumpPiece = this.#model.mustJumpPiece;
@@ -87,9 +105,35 @@ export class GameController {
     #checkWinCondition() {
         const activeDir = this.#model.currentTurnDir;
         if (!this.#model.hasAnyValidMoves(activeDir)) {
+            this.#gameEnded = true;
+            this.#notifyUndoStateChange();
             const winner = activeDir === GAME_RULES.MOVE_DIR_UP ? 'PLAYER_2' : 'PLAYER_1';
             setTimeout(() => alert(`Game Over! ${winner} wins!`), 100);
         }
+    }
+
+    #notifyUndoStateChange() {
+        if (this.#onUndoStateChange) {
+            this.#onUndoStateChange(this.#prevState !== null && !this.#gameEnded);
+        }
+    }
+
+    undo() {
+        if (!this.#prevState || this.#gameEnded) return;
+
+        this.#view.animateUndoMove(
+            this.#lastMove.from,
+            this.#lastMove.to,
+            () => {
+                this.#model.restoreState(this.#prevState);
+                this.#prevState = null;
+                this.#lastMove = null;
+                this.#gameEnded = false;
+                this.#notifyUndoStateChange();
+                this.#deselect();
+                this.#init();
+            }
+        );
     }
 
     #handleMultiJump(mustJumpPiece) {

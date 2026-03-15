@@ -15,6 +15,10 @@ export class Board {
         return this.#board.map(row => row.map(cell => cell ? cell.clone() : null));
     }
 
+    restoreBoard(boardData) {
+        this.#board = boardData.map(row => row.map(cell => cell ? cell.clone() : null));
+    }
+
     getPiece(row, col) {
         if (!this.isInBounds(row, col)) return null;
         return this.#board[row][col];

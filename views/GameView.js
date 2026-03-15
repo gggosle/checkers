@@ -150,4 +150,35 @@ export class GameView {
         document.querySelectorAll(`.${CSS_CLASSES.HIGHLIGHT_CLASS}`).forEach(c => c.classList.remove(CSS_CLASSES.HIGHLIGHT_CLASS));
         document.querySelectorAll(`.${CSS_CLASSES.VALID_MOVE_CLASS}`).forEach(c => c.classList.remove(CSS_CLASSES.VALID_MOVE_CLASS));
     }
+
+    animateUndoMove(from, to, onComplete) {
+        this.#isTransitioning = true;
+        
+        const checkerElement = document.querySelector(`.cell[data-row="${to.row}"][data-col="${to.col}"] .${CSS_CLASSES.CHECKER_CLASS}`);
+        if (!checkerElement) {
+            this.#isTransitioning = false;
+            if (onComplete) onComplete();
+            return;
+        }
+
+        const targetCell = document.querySelector(`.cell[data-row="${from.row}"][data-col="${from.col}"]`);
+        if (!targetCell) {
+            this.#isTransitioning = false;
+            if (onComplete) onComplete();
+            return;
+        }
+
+        const delta = this.#calculateDelta(checkerElement, targetCell);
+        
+        checkerElement.style.transition = 'transform 0.4s ease-in-out';
+        checkerElement.style.transform = `translate(${delta.x}px, ${delta.y}px)`;
+        
+        checkerElement.addEventListener('transitionend', () => {
+            this.#isTransitioning = false;
+            checkerElement.style.transition = '';
+            checkerElement.style.transform = '';
+            
+            if (onComplete) onComplete();
+        }, { once: true });
+    }
 }
