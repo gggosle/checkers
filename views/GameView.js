@@ -131,7 +131,7 @@ export class GameView {
     }
 
     highlightMoves(checkerCoords, validMoves) {
-        this.#clearAllHighlights();
+        this.clearHighlights();
         
         const checkerElement = document.querySelector(`.cell[data-row="${checkerCoords.row}"][data-col="${checkerCoords.col}"] .${CSS_CLASSES.CHECKER_CLASS}`);
         if (checkerElement) {
@@ -146,7 +146,7 @@ export class GameView {
         });
     }
 
-    #clearAllHighlights() {
+    clearHighlights() {
         document.querySelectorAll(`.${CSS_CLASSES.HIGHLIGHT_CLASS}`).forEach(c => c.classList.remove(CSS_CLASSES.HIGHLIGHT_CLASS));
         document.querySelectorAll(`.${CSS_CLASSES.VALID_MOVE_CLASS}`).forEach(c => c.classList.remove(CSS_CLASSES.VALID_MOVE_CLASS));
     }

@@ -172,4 +172,17 @@ export class GameModel {
         this.#hasJumpsAvailable = this.#anyPlayerJumpsAvailable();
     }
 
+    hasAnyValidMoves(color) {
+        for (let r = 0; r < GAME_CONFIG.BOARD_SIZE; r++) {
+            for (let c = 0; c < GAME_CONFIG.BOARD_SIZE; c++) {
+                const piece = this.#board.getPiece(r, c);
+                if (piece && piece.color === color) {
+                    if (this.getValidMoves(r, c).length > 0) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
 }

@@ -1,3 +1,5 @@
+import {Color} from '../models/Color.js';
+
 export class GameController {
     #model;
     #view;
@@ -7,7 +9,7 @@ export class GameController {
     constructor(model, view) {
         this.#model = model;
         this.#view = view;
-        
+
         this.#init();
     }
 
@@ -47,19 +49,19 @@ export class GameController {
     }
 
     #isToggleDeselect(row, col) {
-        return this.#selectedChecker?.row === row && 
-               this.#selectedChecker?.col === col && 
-               !this.#model.mustJumpPiece;
+        return this.#selectedChecker?.row === row &&
+            this.#selectedChecker?.col === col &&
+            !this.#model.mustJumpPiece;
     }
 
     #deselect() {
         this.#selectedChecker = null;
         this.#validMoves = [];
-        this.#init();
+        this.#view.clearHighlights();
     }
 
     #select(row, col, validMoves) {
-        this.#selectedChecker = { row, col };
+        this.#selectedChecker = {row, col};
         this.#validMoves = validMoves;
         this.#view.highlightMoves(this.#selectedChecker, this.#validMoves);
     }
@@ -73,17 +75,26 @@ export class GameController {
         this.#model.executeMove(this.#selectedChecker, move);
 
         const mustJumpPiece = this.#model.mustJumpPiece;
+        this.#init();
         if (mustJumpPiece) {
             this.#handleMultiJump(mustJumpPiece);
         } else {
             this.#deselect();
         }
+        this.#checkWinCondition();
+    }
+
+    #checkWinCondition() {
+        const activePlayer = this.#model.currentTurn;
+        if (!this.#model.hasAnyValidMoves(activePlayer)) {
+            const winner = activePlayer === Color.WHITE ? 'BLACK' : 'WHITE';
+            setTimeout(() => alert(`Game Over! ${winner} wins!`), 100);
+        }
     }
 
     #handleMultiJump(mustJumpPiece) {
-        this.#selectedChecker = { row: mustJumpPiece.row, col: mustJumpPiece.col };
+        this.#selectedChecker = {row: mustJumpPiece.row, col: mustJumpPiece.col};
         this.#validMoves = this.#model.getValidMoves(mustJumpPiece.row, mustJumpPiece.col);
-        this.#init();
         this.#view.highlightMoves(this.#selectedChecker, this.#validMoves);
     }
 }
