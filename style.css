@@ -188,8 +188,7 @@ body {
 }
 
 .checker.highlight {
-    outline: 4px solid var(--highlight-color);
-    outline-offset: 2px;
+    outline: 3px solid var(--highlight-color);
     box-shadow: 
         0 0 20px var(--highlight-color),
         0 6px 12px var(--shadow-color);
