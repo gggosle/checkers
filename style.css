@@ -3,13 +3,13 @@
     --cell-size: 60px;
     --board-size: calc(var(--board-size-cells) * 60px);
     --board-border-color: #333;
-    --cell-white-bg: #f0d9b5;
-    --cell-black-bg: #b58863;
+    --cell-color-1-bg: #f0d9b5;
+    --cell-color-2-bg: #b58863;
     --checker-size: 40px;
-    --checker-white-bg: #fff;
-    --checker-white-border: #ccc;
-    --checker-black-bg: #333;
-    --checker-black-border: #000;
+    --checker-player-1-bg: #fff;
+    --checker-player-1-border: #ccc;
+    --checker-player-2-bg: #333;
+    --checker-player-2-border: #000;
     --highlight-color: #ff0;
     --valid-move-color: rgba(255, 255, 0, 0.4);
 }
@@ -32,12 +32,12 @@
     align-items: center;
 }
 
-.cell.white {
-    background-color: var(--cell-white-bg);
+.cell.color-1-cell {
+    background-color: var(--cell-color-1-bg);
 }
 
-.cell.black {
-    background-color: var(--cell-black-bg);
+.cell.color-2-cell {
+    background-color: var(--cell-color-2-bg);
 }
 
 .checker {
@@ -48,14 +48,14 @@
     box-shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
 
-.checker.white-piece {
-    background-color: var(--checker-white-bg);
-    border: 2px solid var(--checker-white-border);
+.checker.player-1-piece {
+    background-color: var(--checker-player-1-bg);
+    border: 2px solid var(--checker-player-1-border);
 }
 
-.checker.black-piece {
-    background-color: var(--checker-black-bg);
-    border: 2px solid var(--checker-black-border);
+.checker.player-2-piece {
+    background-color: var(--checker-player-2-bg);
+    border: 2px solid var(--checker-player-2-border);
 }
 
 .checker.highlight {

@@ -1,4 +1,4 @@
-import {Color} from '../models/Color.js';
+import {GAME_RULES} from "../constants.js";
 
 export class GameController {
     #model;
@@ -40,7 +40,7 @@ export class GameController {
     }
 
     #isOwnPiece(piece) {
-        return piece && piece.color === this.#model.currentTurn;
+        return piece && piece.direction === this.#model.currentTurnDir;
     }
 
     #isMustJumpPieceViolation(row, col) {
@@ -85,9 +85,9 @@ export class GameController {
     }
 
     #checkWinCondition() {
-        const activePlayer = this.#model.currentTurn;
-        if (!this.#model.hasAnyValidMoves(activePlayer)) {
-            const winner = activePlayer === Color.WHITE ? 'BLACK' : 'WHITE';
+        const activeDir = this.#model.currentTurnDir;
+        if (!this.#model.hasAnyValidMoves(activeDir)) {
+            const winner = activeDir === GAME_RULES.MOVE_DIR_UP ? 'PLAYER_2' : 'PLAYER_1';
             setTimeout(() => alert(`Game Over! ${winner} wins!`), 100);
         }
     }

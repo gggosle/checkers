@@ -1,4 +1,4 @@
 export const Color = Object.freeze({
-    WHITE: 1,
-    BLACK: 2
+    PLAYER_1: 1,
+    PLAYER_2: 2
 });

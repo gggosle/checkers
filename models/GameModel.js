@@ -1,17 +1,16 @@
-import {Color} from './Color.js';
 import {MoveType} from './MoveType.js';
 import {Board} from './Board.js';
-import {GAME_CONFIG} from "../constants.js";
+import {GAME_CONFIG, GAME_RULES} from "../constants.js";
 
 export class GameModel {
     #board;
-    #currentTurn;
+    #currentTurnDir;
     #mustJumpPiece;
     #hasJumpsAvailable;
 
     constructor() {
         this.#board = new Board();
-        this.#currentTurn = Color.WHITE;
+        this.#currentTurnDir = GAME_RULES.MOVE_DIR_UP;
         this.#mustJumpPiece = null;
         this.#hasJumpsAvailable = false;
     }
@@ -28,8 +27,8 @@ export class GameModel {
         return Board.isBlackSquare(row, col);
     }
 
-    get currentTurn() {
-        return this.#currentTurn;
+    get currentTurnDir() {
+        return this.#currentTurnDir;
     }
 
     get mustJumpPiece() {
@@ -38,7 +37,7 @@ export class GameModel {
 
     getValidMoves(row, col) {
         const piece = this.#board.getPiece(row, col);
-        if (!piece || piece.color !== this.#currentTurn) return [];
+        if (!piece || piece.direction !== this.#currentTurnDir) return [];
 
         if (this.#mustJumpPiece && (this.#mustJumpPiece.row !== row || this.#mustJumpPiece.col !== col)) {
             return [];
@@ -101,7 +100,7 @@ export class GameModel {
     }
 
     #tryCalculateJump(piece, targetPiece, dr, dc) {
-        if (targetPiece.color === piece.color) return null;
+        if (targetPiece.direction === piece.direction) return null;
 
         const jumpRow = targetPiece.row + dr;
         const jumpCol = targetPiece.col + dc;
@@ -121,7 +120,7 @@ export class GameModel {
         for (let r = 0; r < GAME_CONFIG.BOARD_SIZE; r++) {
             for (let c = 0; c < GAME_CONFIG.BOARD_SIZE; c++) {
                 const piece = this.#board.getPiece(r, c);
-                if (piece && piece.color === this.#currentTurn) {
+                if (piece && piece.direction === this.#currentTurnDir) {
                     if (this.#hasJumpAvailable(r, c)) {
                         return true;
                     }
@@ -146,12 +145,7 @@ export class GameModel {
     }
 
     #checkPromotion(piece, row) {
-        if (!piece.isKing && ((piece.color === Color.WHITE && row === GAME_CONFIG.BOARD_SIZE - 1) ||
-            (piece.color === Color.BLACK && row === 0))) {
-            piece.makeKing();
-            return true;
-        }
-        return false;
+        return this.#board.checkPromotion(piece, row);
     }
 
     #handlePostMove(piece, toMove, promoted) {
@@ -168,15 +162,17 @@ export class GameModel {
     }
 
     #switchTurn() {
-        this.#currentTurn = this.#currentTurn === Color.WHITE ? Color.BLACK : Color.WHITE;
+        this.#currentTurnDir = this.#currentTurnDir === GAME_RULES.MOVE_DIR_UP 
+            ? GAME_RULES.MOVE_DIR_DOWN 
+            : GAME_RULES.MOVE_DIR_UP;
         this.#hasJumpsAvailable = this.#anyPlayerJumpsAvailable();
     }
 
-    hasAnyValidMoves(color) {
+    hasAnyValidMoves(direction) {
         for (let r = 0; r < GAME_CONFIG.BOARD_SIZE; r++) {
             for (let c = 0; c < GAME_CONFIG.BOARD_SIZE; c++) {
                 const piece = this.#board.getPiece(r, c);
-                if (piece && piece.color === color) {
+                if (piece && piece.direction === direction) {
                     if (this.getValidMoves(r, c).length > 0) {
                         return true;
                     }
