@@ -105,7 +105,6 @@ body {
     display: grid;
     grid-template-columns: repeat(var(--board-size-cells), var(--cell-size));
     grid-template-rows: repeat(var(--board-size-cells), var(--cell-size));
-    border: 4px solid var(--board-border-color);
     border-radius: 8px;
     width: var(--board-size);
     height: var(--board-size);
