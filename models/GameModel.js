@@ -197,4 +197,11 @@ export class GameModel {
         this.#mustJumpPiece = state.mustJumpPiece;
         this.#hasJumpsAvailable = state.hasJumpsAvailable;
     }
+
+    reset() {
+        this.#board = new Board();
+        this.#currentTurnDir = GAME_RULES.MOVE_DIR_UP;
+        this.#mustJumpPiece = null;
+        this.#hasJumpsAvailable = false;
+    }
 }

@@ -9,6 +9,8 @@ export class GameController {
     #lastMove = null;
     #gameEnded = false;
     #onUndoStateChange = null;
+    #onTurnChange = null;
+    #onWin = null;
 
     constructor(model, view) {
         this.#model = model;
@@ -19,6 +21,14 @@ export class GameController {
 
     setOnUndoStateChange(callback) {
         this.#onUndoStateChange = callback;
+    }
+
+    setOnTurnChange(callback) {
+        this.#onTurnChange = callback;
+    }
+
+    setOnWin(callback) {
+        this.#onWin = callback;
     }
 
     #init() {
@@ -107,6 +117,10 @@ export class GameController {
         } else {
             this.#deselect();
         }
+        
+        if (this.#onTurnChange) {
+            this.#onTurnChange(this.#model.currentTurnDir);
+        }
     }
 
     #checkWinCondition() {
@@ -115,7 +129,9 @@ export class GameController {
             this.#gameEnded = true;
             this.#notifyUndoStateChange();
             const winner = activeDir === GAME_RULES.MOVE_DIR_UP ? 'PLAYER_2' : 'PLAYER_1';
-            setTimeout(() => alert(`Game Over! ${winner} wins!`), 100);
+            if (this.#onWin) {
+                this.#onWin(winner);
+            }
         }
     }
 
@@ -139,6 +155,9 @@ export class GameController {
                 this.#notifyUndoStateChange();
                 this.#deselect();
                 this.#init();
+                if (this.#onTurnChange) {
+                    this.#onTurnChange(this.#model.currentTurnDir);
+                }
             }
         );
     }
@@ -147,5 +166,19 @@ export class GameController {
         this.#selectedChecker = {row: mustJumpPiece.row, col: mustJumpPiece.col};
         this.#validMoves = this.#model.getValidMoves(mustJumpPiece.row, mustJumpPiece.col);
         this.#view.highlightMoves(this.#selectedChecker, this.#validMoves);
+    }
+
+    reset() {
+        this.#model.reset();
+        this.#selectedChecker = null;
+        this.#validMoves = [];
+        this.#prevState = null;
+        this.#lastMove = null;
+        this.#gameEnded = false;
+        this.#notifyUndoStateChange();
+        this.#init();
+        if (this.#onTurnChange) {
+            this.#onTurnChange(this.#model.currentTurnDir);
+        }
     }
 }
