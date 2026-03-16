@@ -18,11 +18,11 @@ export const GAME_RULES = {
 
 export const CSS_CLASSES = {
     CELL_CLASS: 'cell',
-    BLACK_CELL_CLASS: 'black',
-    WHITE_CELL_CLASS: 'white',
+    BLACK_CELL_CLASS: 'color-2-cell',
+    WHITE_CELL_CLASS: 'color-1-cell',
     CHECKER_CLASS: 'checker',
-    WHITE_CHECKER_CLASS: 'white-piece',
-    BLACK_CHECKER_CLASS: 'black-piece',
+    PLAYER_1_CHECKER_CLASS: 'player-1-piece',
+    PLAYER_2_CHECKER_CLASS: 'player-2-piece',
     KING_CLASS: 'king',
     HIGHLIGHT_CLASS: 'highlight',
     VALID_MOVE_CLASS: 'valid-move',

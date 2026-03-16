@@ -2,12 +2,36 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkers</title>
     <link rel="stylesheet" href="style.css">
     <script src="main.js" type="module" defer></script>
 </head>
 <body>
-    <div id="board"></div>
+    <div class="game-container">
+        <header class="header">
+            <h1 class="title">CHECKERS</h1>
+            <div class="turn-indicator">
+                <span class="turn-dot player-1" id="turn-dot"></span>
+                <span id="turn-text">Player 1's Turn</span>
+            </div>
+        </header>
+        
+        <main>
+            <div id="board"></div>
+        </main>
+        
+        <footer class="footer">
+            <button id="undo-btn" class="btn btn-primary" disabled>↶ Undo</button>
+        </footer>
+    </div>
 
+    <div class="modal-overlay" id="win-modal">
+        <div class="modal">
+            <h2>Game Over!</h2>
+            <p class="winner-text" id="winner-text">Player 1 Wins!</p>
+            <button id="play-again-btn" class="btn btn-primary">Play Again</button>
+        </div>
+    </div>
 </body>
 </html>

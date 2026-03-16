@@ -2,6 +2,7 @@ import { Color } from '../models/Color.js';
 import {CSS_CLASSES} from "../constants.js";
 
 
+
 export class GameView {
     #boardElement;
     #onCheckerClick;
@@ -49,7 +50,7 @@ export class GameView {
         
         const checkerElement = document.querySelector(`.${CSS_CLASSES.HIGHLIGHT_CLASS}`);
         if (checkerElement && checkerElement.classList.contains(CSS_CLASSES.CHECKER_CLASS)) {
-            this.#animatePieceMove(checkerElement, cellElement, () => {
+            this.animatePieceMove(checkerElement, cellElement, () => {
                 this.#onCellClick(row, col);
             });
         } else {
@@ -57,15 +58,24 @@ export class GameView {
         }
     }
 
-    #animatePieceMove(checkerElement, targetCell, onComplete) {
+    animatePieceMove(checkerElement, targetCell, onComplete) {
+        this.#animate(checkerElement, targetCell, onComplete);
+    }
+
+    #animate(checkerElement, targetCell, onComplete) {
         this.#isTransitioning = true;
         const delta = this.#calculateDelta(checkerElement, targetCell);
         
         checkerElement.style.transition = 'transform 0.4s ease-in-out';
         checkerElement.style.transform = `translate(${delta.x}px, ${delta.y}px)`;
+        checkerElement.style.zIndex = '100';
         
         checkerElement.addEventListener('transitionend', () => {
-            this.#onTransitionEnd(checkerElement, targetCell, onComplete);
+            this.#isTransitioning = false;
+            checkerElement.style.transition = '';
+            checkerElement.style.transform = '';
+            checkerElement.style.zIndex = '';
+            if (onComplete) onComplete();
         }, { once: true });
     }
 
@@ -79,10 +89,6 @@ export class GameView {
         };
     }
 
-    #onTransitionEnd(checkerElement, targetCell, onComplete) {
-        this.#isTransitioning = false;
-        if (onComplete) onComplete();
-    }
 
     render(board, isBlackSquareCallback, onCheckerClickCallback, onCellClickCallback) {
         this.#onCheckerClick = onCheckerClickCallback;
@@ -122,7 +128,7 @@ export class GameView {
     #createCheckerElement(checkerData) {
         const checker = document.createElement('div');
         checker.classList.add(CSS_CLASSES.CHECKER_CLASS);
-        checker.classList.add(checkerData.color === Color.WHITE ? CSS_CLASSES.WHITE_CHECKER_CLASS : CSS_CLASSES.BLACK_CHECKER_CLASS);
+        checker.classList.add(checkerData.color === Color.PLAYER_1 ? CSS_CLASSES.PLAYER_1_CHECKER_CLASS : CSS_CLASSES.PLAYER_2_CHECKER_CLASS);
         if (checkerData.isKing) {
             checker.classList.add(CSS_CLASSES.KING_CLASS);
         }
@@ -130,7 +136,7 @@ export class GameView {
     }
 
     highlightMoves(checkerCoords, validMoves) {
-        this.#clearAllHighlights();
+        this.clearHighlights();
         
         const checkerElement = document.querySelector(`.cell[data-row="${checkerCoords.row}"][data-col="${checkerCoords.col}"] .${CSS_CLASSES.CHECKER_CLASS}`);
         if (checkerElement) {
@@ -145,8 +151,20 @@ export class GameView {
         });
     }
 
-    #clearAllHighlights() {
+    clearHighlights() {
         document.querySelectorAll(`.${CSS_CLASSES.HIGHLIGHT_CLASS}`).forEach(c => c.classList.remove(CSS_CLASSES.HIGHLIGHT_CLASS));
         document.querySelectorAll(`.${CSS_CLASSES.VALID_MOVE_CLASS}`).forEach(c => c.classList.remove(CSS_CLASSES.VALID_MOVE_CLASS));
+    }
+
+    animateUndoMove(from, to, onComplete) {
+        const checkerElement = document.querySelector(`.cell[data-row="${to.row}"][data-col="${to.col}"] .${CSS_CLASSES.CHECKER_CLASS}`);
+        const targetCell = document.querySelector(`.cell[data-row="${from.row}"][data-col="${from.col}"]`);
+        
+        if (!checkerElement || !targetCell) {
+            if (onComplete) onComplete();
+            return;
+        }
+
+        this.#animate(checkerElement, targetCell, onComplete);
     }
 }
