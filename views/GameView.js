@@ -46,7 +46,7 @@ export class GameView {
         const row = parseInt(cellElement.dataset.row);
         const col = parseInt(cellElement.dataset.col);
         
-        const checkerElement = document.querySelector(`.${CSS_BOARD.HIGHLIGHT_CLASS}`);
+        const checkerElement = this.#boardElement.querySelector(`.${CSS_BOARD.HIGHLIGHT_CLASS}`);
         if (checkerElement && checkerElement.classList.contains(CSS_BOARD.CHECKER_CLASS)) {
             this.animatePieceMove(checkerElement, cellElement, () => {
                 this.#onCellClick(row, col);
@@ -136,13 +136,13 @@ export class GameView {
     highlightMoves(checkerCoords, validMoves) {
         this.clearHighlights();
         
-        const checkerElement = document.querySelector(`.cell[data-row="${checkerCoords.row}"][data-col="${checkerCoords.col}"] .${CSS_BOARD.CHECKER_CLASS}`);
+        const checkerElement = this.#boardElement.querySelector(`.cell[data-row="${checkerCoords.row}"][data-col="${checkerCoords.col}"] .${CSS_BOARD.CHECKER_CLASS}`);
         if (checkerElement) {
             checkerElement.classList.add(CSS_BOARD.HIGHLIGHT_CLASS);
         }
 
         validMoves.forEach(move => {
-            const cellElement = document.querySelector(`.cell[data-row="${move.row}"][data-col="${move.col}"]`);
+            const cellElement = this.#boardElement.querySelector(`.cell[data-row="${move.row}"][data-col="${move.col}"]`);
             if (cellElement) {
                 cellElement.classList.add(CSS_BOARD.VALID_MOVE_CLASS);
             }
@@ -150,13 +150,13 @@ export class GameView {
     }
 
     clearHighlights() {
-        document.querySelectorAll(`.${CSS_BOARD.HIGHLIGHT_CLASS}`).forEach(c => c.classList.remove(CSS_BOARD.HIGHLIGHT_CLASS));
-        document.querySelectorAll(`.${CSS_BOARD.VALID_MOVE_CLASS}`).forEach(c => c.classList.remove(CSS_BOARD.VALID_MOVE_CLASS));
+        this.#boardElement.querySelectorAll(`.${CSS_BOARD.HIGHLIGHT_CLASS}`).forEach(c => c.classList.remove(CSS_BOARD.HIGHLIGHT_CLASS));
+        this.#boardElement.querySelectorAll(`.${CSS_BOARD.VALID_MOVE_CLASS}`).forEach(c => c.classList.remove(CSS_BOARD.VALID_MOVE_CLASS));
     }
 
     animateUndoMove(from, to, onComplete) {
-        const checkerElement = document.querySelector(`.cell[data-row="${to.row}"][data-col="${to.col}"] .${CSS_BOARD.CHECKER_CLASS}`);
-        const targetCell = document.querySelector(`.cell[data-row="${from.row}"][data-col="${from.col}"]`);
+        const checkerElement = this.#boardElement.querySelector(`.cell[data-row="${to.row}"][data-col="${to.col}"] .${CSS_BOARD.CHECKER_CLASS}`);
+        const targetCell = this.#boardElement.querySelector(`.cell[data-row="${from.row}"][data-col="${from.col}"]`);
         
         if (!checkerElement || !targetCell) {
             if (onComplete) onComplete();
