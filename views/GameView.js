@@ -1,8 +1,6 @@
 import { Color } from '../models/Color.js';
 import {CSS_CLASSES} from "../constants.js";
 
-
-
 export class GameView {
     #boardElement;
     #onCheckerClick;

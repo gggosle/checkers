@@ -27,3 +27,12 @@ export const CSS_CLASSES = {
     HIGHLIGHT_CLASS: 'highlight',
     VALID_MOVE_CLASS: 'valid-move',
 };
+
+export const CSS_CLASSES_INFO = {
+    TURN_DOT_CLASS: 'turn-dot',
+    TURN_NEXT_CLASS: 'turn-text',
+    WIN_MODAL_CLASS: 'win-modal',
+    WINNER_TEXT_CLASS: 'winner-text',
+    PLAY_AGAIN_BTN_CLASS: 'play-again-btn',
+    ACTIVE_CLASS: 'active',
+};
