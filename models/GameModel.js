@@ -203,5 +203,27 @@ export class GameModel {
         this.#currentTurnDir = GAME_RULES.MOVE_DIR_UP;
         this.#mustJumpPiece = null;
         this.#hasJumpsAvailable = false;
+        this.clearSavedState();
+    }
+
+    saveToLocalStorage() {
+        localStorage.setItem('checkers_state', JSON.stringify(this.captureState()));
+    }
+
+    loadFromLocalStorage() {
+        const saved = localStorage.getItem('checkers_state');
+        if (saved) {
+            try {
+                this.restoreState(JSON.parse(saved));
+                return true;
+            } catch (e) {
+                console.error("Failed to load state from localStorage", e);
+            }
+        }
+        return false;
+    }
+
+    clearSavedState() {
+        localStorage.removeItem('checkers_state');
     }
 }
