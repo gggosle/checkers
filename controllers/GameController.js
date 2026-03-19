@@ -31,6 +31,14 @@ export class GameController {
         this.#onWin = callback;
     }
 
+    getSelectedChecker() {
+        return this.#selectedChecker;
+    }
+
+    getValidMoves() {
+        return this.#validMoves;
+    }
+
     #init() {
         this.#view.render(
             this.#model.boardClone,

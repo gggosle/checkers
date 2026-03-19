@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const boardElement = document.getElementById('board');
     
     const model = new GameModel();
-    const view = new GameView(boardElement);
+    const view = new GameView(boardElement, () => controller.getSelectedChecker());
     const controller = new GameController(model, view);
 
     const infoModel = new InfoModel(model.currentTurnDir);

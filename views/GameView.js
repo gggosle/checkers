@@ -6,9 +6,12 @@ export class GameView {
     #onCheckerClick;
     #onCellClick;
     #isTransitioning = false;
+    #dragData = null;
+    #getSelectedCheckerInfo = null;
 
-    constructor(boardElement) {
+    constructor(boardElement, getSelectedCheckerInfoCallback) {
         this.#boardElement = boardElement;
+        this.#getSelectedCheckerInfo = getSelectedCheckerInfoCallback;
         this.#initEvents();
     }
 
@@ -17,25 +20,112 @@ export class GameView {
             if (this.#isTransitioning) return;
             this.#handleBoardClick(e);
         });
+
+        this.#boardElement.addEventListener('mousedown', (e) => {
+            this.#handleMouseDown(e);
+        });
+
+        this.#boardElement.addEventListener('dragstart', (e) => {
+            this.#handleDragStart(e);
+        });
+
+        this.#boardElement.addEventListener('dragover', (e) => {
+            this.#handleDragOver(e);
+        });
+
+        this.#boardElement.addEventListener('drop', (e) => {
+            this.#handleDrop(e);
+        });
     }
 
-    #handleBoardClick(e) {
+    async #handleMouseDown(e) {
         const checkerElement = e.target.closest(`.${CSS_CLASSES.CHECKER_CLASS}`);
-        if (checkerElement && this.#onCheckerClick) {
-            this.#handleCheckerClickEvent(checkerElement);
+        if (!checkerElement) return;
+
+        const cellElement = checkerElement.parentElement;
+        const row = parseInt(cellElement.dataset.row);
+        const col = parseInt(cellElement.dataset.col);
+
+        const selectedInfo = this.#getSelectedCheckerInfo ? this.#getSelectedCheckerInfo() : null;
+        const isSelected = selectedInfo && selectedInfo.row === row && selectedInfo.col === col;
+
+        if (!isSelected && this.#onCheckerClick) {
+            this.#onCheckerClick(row, col);
+            
+            await new Promise(resolve => {
+                const checkSelected = () => {
+                    const info = this.#getSelectedCheckerInfo ? this.#getSelectedCheckerInfo() : null;
+                    if (info && info.row === row && info.col === col) {
+                        resolve();
+                    } else {
+                        setTimeout(checkSelected, 10);
+                    }
+                };
+                checkSelected();
+            });
+        }
+    }
+
+    #handleDragStart(e) {
+        const checkerElement = e.target.closest(`.${CSS_CLASSES.CHECKER_CLASS}`);
+        if (!checkerElement) return;
+
+        const selectedInfo = this.#getSelectedCheckerInfo ? this.#getSelectedCheckerInfo() : null;
+        if (!selectedInfo) {
+            e.preventDefault();
             return;
         }
 
+        const cellElement = checkerElement.parentElement;
+        this.#dragData = {
+            row: parseInt(cellElement.dataset.row),
+            col: parseInt(cellElement.dataset.col),
+            element: checkerElement
+        };
+        
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', JSON.stringify(this.#dragData));
+    }
+
+    #handleDragOver(e) {
+        const cellElement = e.target.closest(`.${CSS_CLASSES.CELL_CLASS}`);
+        if (!cellElement) return;
+        
+        if (cellElement.classList.contains(CSS_CLASSES.VALID_MOVE_CLASS)) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+    }
+
+    #handleDrop(e) {
+        e.preventDefault();
+        
+        if (!this.#dragData) return;
+
+        const checkerElement = this.#dragData.element;
+        const cellElement = e.target.closest(`.${CSS_CLASSES.CELL_CLASS}`);
+        if (!cellElement || !cellElement.classList.contains(CSS_CLASSES.VALID_MOVE_CLASS)) {
+            this.#dragData = null;
+            return;
+        }
+
+        const targetRow = parseInt(cellElement.dataset.row);
+        const targetCol = parseInt(cellElement.dataset.col);
+
+        this.animatePieceMove(checkerElement, cellElement, () => {
+            if (this.#onCellClick) {
+                this.#onCellClick(targetRow, targetCol);
+            }
+        });
+
+        this.#dragData = null;
+    }
+
+    #handleBoardClick(e) {
         const cellElement = e.target.closest(`.${CSS_CLASSES.CELL_CLASS}`);
         if (this.#isValidCellClick(cellElement)) {
             this.#handleCellClickEvent(cellElement);
         }
-    }
-
-    #handleCheckerClickEvent(checkerElement) {
-        const row = parseInt(checkerElement.parentElement.dataset.row);
-        const col = parseInt(checkerElement.parentElement.dataset.col);
-        this.#onCheckerClick(row, col);
     }
 
     #isValidCellClick(cellElement) {
@@ -130,6 +220,7 @@ export class GameView {
         if (checkerData.isKing) {
             checker.classList.add(CSS_CLASSES.KING_CLASS);
         }
+        checker.draggable = true;
         return checker;
     }
 
