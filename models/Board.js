@@ -16,7 +16,10 @@ export class Board {
     }
 
     restoreBoard(boardData) {
-        this.#board = boardData.map(row => row.map(cell => cell ? cell.clone() : null));
+        this.#board = boardData.map(row => row.map(cell => {
+            if (!cell) return null;
+            return cell instanceof Checker ? cell.clone() : Checker.fromJSON(cell);
+        }));
     }
 
     getPiece(row, col) {
