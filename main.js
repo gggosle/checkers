@@ -7,8 +7,9 @@ import { InfoController } from './controllers/InfoController.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const boardElement = document.getElementById('board');
-    
+
     const model = new GameModel();
+    const hasSavedState = model.loadFromLocalStorage();
     const view = new GameView(boardElement, () => controller.getSelectedChecker());
     const controller = new GameController(model, view);
 
@@ -16,6 +17,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const infoView = new InfoView();
     const infoController = new InfoController(infoModel, infoView);
 
+    if (hasSavedState) {
+        infoController.updateTurn(model.currentTurnDir);
+    }
     controller.setOnTurnChange((newDir) => {
         infoController.updateTurn(newDir);
     });

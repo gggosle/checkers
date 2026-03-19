@@ -121,10 +121,11 @@ export class GameController {
         } else {
             this.#deselect();
         }
-        
+
         if (this.#onTurnChange) {
             this.#onTurnChange(this.#model.currentTurnDir);
         }
+        this.#model.saveToLocalStorage();
     }
 
     #checkWinCondition() {
@@ -132,6 +133,7 @@ export class GameController {
         if (!this.#model.hasAnyValidMoves(activeDir)) {
             this.#gameEnded = true;
             this.#notifyUndoStateChange();
+            this.#model.clearSavedState();
             const winner = activeDir === GAME_RULES.MOVE_DIR_UP ? 'PLAYER_2' : 'PLAYER_1';
             if (this.#onWin) {
                 this.#onWin(winner);
@@ -162,6 +164,7 @@ export class GameController {
                 if (this.#onTurnChange) {
                     this.#onTurnChange(this.#model.currentTurnDir);
                 }
+                this.#model.saveToLocalStorage();
             }
         );
     }

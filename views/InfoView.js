@@ -1,4 +1,4 @@
-import {CSS_CLASSES_INFO} from "../constants.js";
+import {CSS_INFO} from "../constants.js";
 
 export class InfoView {
     #turnDotElement;
@@ -8,11 +8,11 @@ export class InfoView {
     #playAgainBtn;
 
     constructor() {
-        this.#turnDotElement = document.getElementById(CSS_CLASSES_INFO.TURN_DOT_CLASS);
-        this.#turnTextElement = document.getElementById(CSS_CLASSES_INFO.TURN_NEXT_CLASS);
-        this.#winModalElement = document.getElementById(CSS_CLASSES_INFO.WIN_MODAL_CLASS);
-        this.#winnerTextElement = document.getElementById(CSS_CLASSES_INFO.WINNER_TEXT_CLASS);
-        this.#playAgainBtn = document.getElementById(CSS_CLASSES_INFO.PLAY_AGAIN_BTN_CLASS);
+        this.#turnDotElement = document.getElementById(CSS_INFO.TURN_DOT_ID);
+        this.#turnTextElement = document.getElementById(CSS_INFO.TURN_NEXT_ID);
+        this.#winModalElement = document.getElementById(CSS_INFO.WIN_MODAL_ID);
+        this.#winnerTextElement = document.getElementById(CSS_INFO.WINNER_TEXT_ID);
+        this.#playAgainBtn = document.getElementById(CSS_INFO.PLAY_AGAIN_BTN_ID);
     }
 
     updateTurnDisplay(playerNum) {
@@ -25,13 +25,13 @@ export class InfoView {
     showWinModal(winner) {
         if (this.#winModalElement && this.#winnerTextElement) {
             this.#winnerTextElement.textContent = `${winner} Wins!`;
-            this.#winModalElement.classList.add(CSS_CLASSES_INFO.ACTIVE_CLASS);
+            this.#winModalElement.classList.add(CSS_INFO.ACTIVE_CLASS);
         }
     }
 
     hideWinModal() {
         if (this.#winModalElement) {
-            this.#winModalElement.classList.remove(CSS_CLASSES_INFO.ACTIVE_CLASS);
+            this.#winModalElement.classList.remove(CSS_INFO.ACTIVE_CLASS);
         }
     }
 

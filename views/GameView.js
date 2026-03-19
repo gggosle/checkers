@@ -1,5 +1,5 @@
 import { Color } from '../models/Color.js';
-import {CSS_CLASSES} from "../constants.js";
+import {CSS_BOARD} from "../constants.js";
 
 export class GameView {
     #boardElement;
@@ -117,15 +117,15 @@ export class GameView {
     }
 
     #isValidCellClick(cellElement) {
-        return cellElement && this.#onCellClick && cellElement.classList.contains(CSS_CLASSES.VALID_MOVE_CLASS);
+        return cellElement && this.#onCellClick && cellElement.classList.contains(CSS_BOARD.VALID_MOVE_CLASS);
     }
 
     #handleCellClickEvent(cellElement) {
         const row = parseInt(cellElement.dataset.row);
         const col = parseInt(cellElement.dataset.col);
         
-        const checkerElement = document.querySelector(`.${CSS_CLASSES.HIGHLIGHT_CLASS}`);
-        if (checkerElement && checkerElement.classList.contains(CSS_CLASSES.CHECKER_CLASS)) {
+        const checkerElement = this.#boardElement.querySelector(`.${CSS_BOARD.HIGHLIGHT_CLASS}`);
+        if (checkerElement && checkerElement.classList.contains(CSS_BOARD.CHECKER_CLASS)) {
             this.animatePieceMove(checkerElement, cellElement, () => {
                 this.#onCellClick(row, col);
             });
@@ -194,8 +194,8 @@ export class GameView {
 
     #createCellElement(row, col, isBlack) {
         const cell = document.createElement('div');
-        cell.classList.add(CSS_CLASSES.CELL_CLASS);
-        cell.classList.add(isBlack ? CSS_CLASSES.BLACK_CELL_CLASS : CSS_CLASSES.WHITE_CELL_CLASS);
+        cell.classList.add(CSS_BOARD.CELL_CLASS);
+        cell.classList.add(isBlack ? CSS_BOARD.BLACK_CELL_CLASS : CSS_BOARD.WHITE_CELL_CLASS);
         cell.dataset.row = row;
         cell.dataset.col = col;
         return cell;
@@ -203,10 +203,10 @@ export class GameView {
 
     #createCheckerElement(checkerData) {
         const checker = document.createElement('div');
-        checker.classList.add(CSS_CLASSES.CHECKER_CLASS);
-        checker.classList.add(checkerData.color === Color.PLAYER_1 ? CSS_CLASSES.PLAYER_1_CHECKER_CLASS : CSS_CLASSES.PLAYER_2_CHECKER_CLASS);
+        checker.classList.add(CSS_BOARD.CHECKER_CLASS);
+        checker.classList.add(checkerData.color === Color.PLAYER_1 ? CSS_BOARD.PLAYER_1_CHECKER_CLASS : CSS_BOARD.PLAYER_2_CHECKER_CLASS);
         if (checkerData.isKing) {
-            checker.classList.add(CSS_CLASSES.KING_CLASS);
+            checker.classList.add(CSS_BOARD.KING_CLASS);
         }
         checker.draggable = true;
         return checker;
@@ -215,27 +215,27 @@ export class GameView {
     highlightMoves(checkerCoords, validMoves) {
         this.clearHighlights();
         
-        const checkerElement = document.querySelector(`.cell[data-row="${checkerCoords.row}"][data-col="${checkerCoords.col}"] .${CSS_CLASSES.CHECKER_CLASS}`);
+        const checkerElement = this.#boardElement.querySelector(`.cell[data-row="${checkerCoords.row}"][data-col="${checkerCoords.col}"] .${CSS_BOARD.CHECKER_CLASS}`);
         if (checkerElement) {
-            checkerElement.classList.add(CSS_CLASSES.HIGHLIGHT_CLASS);
+            checkerElement.classList.add(CSS_BOARD.HIGHLIGHT_CLASS);
         }
 
         validMoves.forEach(move => {
-            const cellElement = document.querySelector(`.cell[data-row="${move.row}"][data-col="${move.col}"]`);
+            const cellElement = this.#boardElement.querySelector(`.cell[data-row="${move.row}"][data-col="${move.col}"]`);
             if (cellElement) {
-                cellElement.classList.add(CSS_CLASSES.VALID_MOVE_CLASS);
+                cellElement.classList.add(CSS_BOARD.VALID_MOVE_CLASS);
             }
         });
     }
 
     clearHighlights() {
-        document.querySelectorAll(`.${CSS_CLASSES.HIGHLIGHT_CLASS}`).forEach(c => c.classList.remove(CSS_CLASSES.HIGHLIGHT_CLASS));
-        document.querySelectorAll(`.${CSS_CLASSES.VALID_MOVE_CLASS}`).forEach(c => c.classList.remove(CSS_CLASSES.VALID_MOVE_CLASS));
+        this.#boardElement.querySelectorAll(`.${CSS_BOARD.HIGHLIGHT_CLASS}`).forEach(c => c.classList.remove(CSS_BOARD.HIGHLIGHT_CLASS));
+        this.#boardElement.querySelectorAll(`.${CSS_BOARD.VALID_MOVE_CLASS}`).forEach(c => c.classList.remove(CSS_BOARD.VALID_MOVE_CLASS));
     }
 
     animateUndoMove(from, to, onComplete) {
-        const checkerElement = document.querySelector(`.cell[data-row="${to.row}"][data-col="${to.col}"] .${CSS_CLASSES.CHECKER_CLASS}`);
-        const targetCell = document.querySelector(`.cell[data-row="${from.row}"][data-col="${from.col}"]`);
+        const checkerElement = this.#boardElement.querySelector(`.cell[data-row="${to.row}"][data-col="${to.col}"] .${CSS_BOARD.CHECKER_CLASS}`);
+        const targetCell = this.#boardElement.querySelector(`.cell[data-row="${from.row}"][data-col="${from.col}"]`);
         
         if (!checkerElement || !targetCell) {
             if (onComplete) onComplete();
