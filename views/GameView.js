@@ -38,7 +38,7 @@ export class GameView {
         });
     }
 
-    async #handleMouseDown(e) {
+    #handleMouseDown(e) {
         const checkerElement = e.target.closest(`.${CSS_CLASSES.CHECKER_CLASS}`);
         if (!checkerElement) return;
 
@@ -51,18 +51,6 @@ export class GameView {
 
         if (!isSelected && this.#onCheckerClick) {
             this.#onCheckerClick(row, col);
-            
-            await new Promise(resolve => {
-                const checkSelected = () => {
-                    const info = this.#getSelectedCheckerInfo ? this.#getSelectedCheckerInfo() : null;
-                    if (info && info.row === row && info.col === col) {
-                        resolve();
-                    } else {
-                        setTimeout(checkSelected, 10);
-                    }
-                };
-                checkSelected();
-            });
         }
     }
 

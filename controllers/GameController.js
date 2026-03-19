@@ -35,10 +35,6 @@ export class GameController {
         return this.#selectedChecker;
     }
 
-    getValidMoves() {
-        return this.#validMoves;
-    }
-
     #init() {
         this.#view.render(
             this.#model.boardClone,
