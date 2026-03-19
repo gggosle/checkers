@@ -39,7 +39,7 @@ export class GameView {
     }
 
     #handleMouseDown(e) {
-        const checkerElement = e.target.closest(`.${CSS_CLASSES.CHECKER_CLASS}`);
+        const checkerElement = e.target.closest(`.${CSS_BOARD.CHECKER_CLASS}`);
         if (!checkerElement) return;
 
         const cellElement = checkerElement.parentElement;
@@ -55,7 +55,7 @@ export class GameView {
     }
 
     #handleDragStart(e) {
-        const checkerElement = e.target.closest(`.${CSS_CLASSES.CHECKER_CLASS}`);
+        const checkerElement = e.target.closest(`.${CSS_BOARD.CHECKER_CLASS}`);
         if (!checkerElement) return;
 
         const selectedInfo = this.#getSelectedCheckerInfo ? this.#getSelectedCheckerInfo() : null;
@@ -76,10 +76,10 @@ export class GameView {
     }
 
     #handleDragOver(e) {
-        const cellElement = e.target.closest(`.${CSS_CLASSES.CELL_CLASS}`);
+        const cellElement = e.target.closest(`.${CSS_BOARD.CELL_CLASS}`);
         if (!cellElement) return;
         
-        if (cellElement.classList.contains(CSS_CLASSES.VALID_MOVE_CLASS)) {
+        if (cellElement.classList.contains(CSS_BOARD.VALID_MOVE_CLASS)) {
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
         }
@@ -91,8 +91,8 @@ export class GameView {
         if (!this.#dragData) return;
 
         const checkerElement = this.#dragData.element;
-        const cellElement = e.target.closest(`.${CSS_CLASSES.CELL_CLASS}`);
-        if (!cellElement || !cellElement.classList.contains(CSS_CLASSES.VALID_MOVE_CLASS)) {
+        const cellElement = e.target.closest(`.${CSS_BOARD.CELL_CLASS}`);
+        if (!cellElement || !cellElement.classList.contains(CSS_BOARD.VALID_MOVE_CLASS)) {
             this.#dragData = null;
             return;
         }
@@ -110,7 +110,7 @@ export class GameView {
     }
 
     #handleBoardClick(e) {
-        const cellElement = e.target.closest(`.${CSS_CLASSES.CELL_CLASS}`);
+        const cellElement = e.target.closest(`.${CSS_BOARD.CELL_CLASS}`);
         if (this.#isValidCellClick(cellElement)) {
             this.#handleCellClickEvent(cellElement);
         }
