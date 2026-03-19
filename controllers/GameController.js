@@ -31,6 +31,10 @@ export class GameController {
         this.#onWin = callback;
     }
 
+    getSelectedChecker() {
+        return this.#selectedChecker;
+    }
+
     #init() {
         this.#view.render(
             this.#model.boardClone,

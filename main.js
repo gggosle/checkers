@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const model = new GameModel();
     const hasSavedState = model.loadFromLocalStorage();
-    const view = new GameView(boardElement);
+    const view = new GameView(boardElement, () => controller.getSelectedChecker());
     const controller = new GameController(model, view);
 
     const infoModel = new InfoModel(model.currentTurnDir);
