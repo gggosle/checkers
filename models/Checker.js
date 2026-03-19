@@ -46,16 +46,6 @@ export class Checker {
         return new Checker(this.#color, this.#row, this.#col, this.#direction, this.#isKing);
     }
 
-    toJSON() {
-        return {
-            color: this.#color,
-            row: this.#row,
-            col: this.#col,
-            direction: this.#direction,
-            isKing: this.#isKing
-        };
-    }
-
     static fromJSON(json) {
         return new Checker(json.color, json.row, json.col, json.direction, json.isKing);
     }
