@@ -207,11 +207,11 @@ export class GameModel {
     }
 
     saveToLocalStorage() {
-        localStorage.setItem('checkers_state', JSON.stringify(this.captureState()));
+        localStorage.setItem(GAME_CONFIG.LOCAL_STORAGE_STATE_KEY, JSON.stringify(this.captureState()));
     }
 
     loadFromLocalStorage() {
-        const saved = localStorage.getItem('checkers_state');
+        const saved = localStorage.getItem(GAME_CONFIG.LOCAL_STORAGE_STATE_KEY);
         if (saved) {
             try {
                 this.restoreState(JSON.parse(saved));
@@ -224,6 +224,6 @@ export class GameModel {
     }
 
     clearSavedState() {
-        localStorage.removeItem('checkers_state');
+        localStorage.removeItem(GAME_CONFIG.LOCAL_STORAGE_STATE_KEY);
     }
 }

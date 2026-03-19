@@ -1,5 +1,6 @@
 export const GAME_CONFIG = {
     BOARD_SIZE: 8,
+    LOCAL_STORAGE_STATE_KEY: 'checkers_state';
 };
 
 export const GAME_RULES = {
