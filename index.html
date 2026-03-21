@@ -17,9 +17,18 @@
             </div>
         </header>
         
-        <main>
-            <div id="board"></div>
-        </main>
+        <div class="main-content">
+            <main>
+                <div id="board"></div>
+            </main>
+
+            <aside class="history-panel">
+                <h2 class="history-title">Move History</h2>
+                <div class="history-list-container">
+                    <ul id="history-list"></ul>
+                </div>
+            </aside>
+        </div>
         
         <footer class="footer">
             <button id="undo-btn" class="btn btn-primary" disabled>↶ Undo</button>
