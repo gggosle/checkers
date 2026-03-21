@@ -158,12 +158,18 @@ export class GameController {
         const move = this.#validMoves.find(m => m.row === row && m.col === col);
         if (!move) return;
 
-        this.#recordMoveState(move);
-        this.#model.executeMove(this.#selectedChecker, move);
-        this.#cursorRow = row;
-        this.#cursorCol = col;
-        this.#processMoveResult();
-        this.#checkWinCondition();
+        this.#view.animateMove(
+            this.#selectedChecker,
+            {row, col},
+            () => {
+                this.#recordMoveState(move);
+                this.#model.executeMove(this.#selectedChecker, move);
+                this.#cursorRow = row;
+                this.#cursorCol = col;
+                this.#processMoveResult();
+                this.#checkWinCondition();
+            }
+        );
     }
 
     #recordMoveState(move) {
