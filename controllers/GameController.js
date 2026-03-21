@@ -3,6 +3,7 @@ import {GAME_RULES} from "../constants.js";
 export class GameController {
     #model;
     #view;
+    #storage;
     #selectedChecker = null;
     #validMoves = [];
     #prevState = null;
@@ -12,10 +13,10 @@ export class GameController {
     #onTurnChange = null;
     #onWin = null;
 
-    constructor(model, view) {
+    constructor(model, view, storage) {
         this.#model = model;
         this.#view = view;
-
+        this.#storage = storage;
         this.#init();
     }
 
@@ -125,7 +126,11 @@ export class GameController {
         if (this.#onTurnChange) {
             this.#onTurnChange(this.#model.currentTurnDir);
         }
-        this.#model.saveToLocalStorage();
+        this.#saveStateToLocalStorage();
+    }
+
+    #saveStateToLocalStorage() {
+        this.#storage.saveToLocalStorage(this.#model.captureState());
     }
 
     #checkWinCondition() {
@@ -133,7 +138,7 @@ export class GameController {
         if (!this.#model.hasAnyValidMoves(activeDir)) {
             this.#gameEnded = true;
             this.#notifyUndoStateChange();
-            this.#model.clearSavedState();
+            this.#storage.clearSavedState();
             const winner = activeDir === GAME_RULES.MOVE_DIR_UP ? 'PLAYER_2' : 'PLAYER_1';
             if (this.#onWin) {
                 this.#onWin(winner);
@@ -164,7 +169,7 @@ export class GameController {
                 if (this.#onTurnChange) {
                     this.#onTurnChange(this.#model.currentTurnDir);
                 }
-                this.#model.saveToLocalStorage();
+                this.#saveStateToLocalStorage();
             }
         );
     }
@@ -177,6 +182,7 @@ export class GameController {
 
     reset() {
         this.#model.reset();
+        this.#storage.clearSavedState();
         this.#selectedChecker = null;
         this.#validMoves = [];
         this.#prevState = null;
@@ -187,5 +193,6 @@ export class GameController {
         if (this.#onTurnChange) {
             this.#onTurnChange(this.#model.currentTurnDir);
         }
+
     }
 }

@@ -1,25 +1,26 @@
 import { GameModel } from './models/GameModel.js';
 import { GameView } from './views/GameView.js';
 import { GameController } from './controllers/GameController.js';
+import { Storage } from './models/Storage.js';
 import { InfoModel } from './models/InfoModel.js';
 import { InfoView } from './views/InfoView.js';
 import { InfoController } from './controllers/InfoController.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const boardElement = document.getElementById('board');
-
+    const storage = new Storage();
+    const currentState = storage.getStateFromLocalStorage();
     const model = new GameModel();
-    const hasSavedState = model.loadFromLocalStorage();
-    const view = new GameView(boardElement, () => controller.getSelectedChecker());
-    const controller = new GameController(model, view);
 
+    if (currentState) {
+        model.restoreState(currentState);
+    }
+
+    const view = new GameView(boardElement, () => controller.getSelectedChecker());
+    const controller = new GameController(model, view, storage);
     const infoModel = new InfoModel(model.currentTurnDir);
     const infoView = new InfoView();
     const infoController = new InfoController(infoModel, infoView);
-
-    if (hasSavedState) {
-        infoController.updateTurn(model.currentTurnDir);
-    }
     controller.setOnTurnChange((newDir) => {
         infoController.updateTurn(newDir);
     });
