@@ -57,6 +57,9 @@ export class Checker {
     }
 
     static fromJSON(json) {
+        if (!json?.color || json.row == null || json.col == null || json.direction == null || json.isKing == null) {
+            throw new Error("fromJSON: Missing critical Checker data ");
+        }
         return new Checker(json.color, json.row, json.col, json.direction, json.isKing);
     }
 }
