@@ -319,6 +319,13 @@ body {
     animation: validPulse var(--animation-selected);
 }
 
+.cell.keyboard-cursor {
+    outline: 4px solid var(--highlight-color);
+    outline-offset: -4px;
+    z-index: 5;
+    box-shadow: inset 0 0 15px var(--highlight-color);
+}
+
 @keyframes validPulse {
     0%, 100% { transform: scale(1); opacity: 0.8; }
     50% { transform: scale(1.2); opacity: 0.5; }

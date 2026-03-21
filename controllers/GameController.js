@@ -1,4 +1,4 @@
-import {GAME_RULES} from "../constants.js";
+import {GAME_CONFIG, GAME_RULES} from "../constants.js";
 
 export class GameController {
     #model;
@@ -9,6 +9,8 @@ export class GameController {
     #prevState = null;
     #lastMove = null;
     #gameEnded = false;
+    #cursorRow = 0;
+    #cursorCol = 0;
     #onUndoStateChange = null;
     #onTurnChange = null;
     #onMoveExecuted = null;
@@ -19,6 +21,7 @@ export class GameController {
         this.#view = view;
         this.#storage = storage;
         this.#init();
+        this.#initKeyboardEvents();
     }
 
     setOnMoveExecuted(callback) {
@@ -48,9 +51,61 @@ export class GameController {
             (row, col) => this.#handleCheckerClick(row, col),
             (row, col) => this.#handleCellClick(row, col)
         );
+        this.#view.setCursor(this.#cursorRow, this.#cursorCol);
+    }
+
+    #initKeyboardEvents() {
+        document.addEventListener('keydown', (e) => {
+            if (this.#gameEnded) return;
+
+            switch (e.key) {
+                case 'ArrowUp':
+                    e.preventDefault();
+                    this.#moveCursor(-1, 0);
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    this.#moveCursor(1, 0);
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    this.#moveCursor(0, -1);
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    this.#moveCursor(0, 1);
+                    break;
+                case 'Enter':
+                case ' ':
+                    e.preventDefault();
+                    this.#handleCursorAction();
+                    break;
+            }
+        });
+    }
+
+    #moveCursor(dr, dc) {
+        const newRow = Math.max(0, Math.min(GAME_CONFIG.BOARD_SIZE - 1, this.#cursorRow + dr));
+        const newCol = Math.max(0, Math.min(GAME_CONFIG.BOARD_SIZE - 1, this.#cursorCol + dc));
+
+        if (newRow !== this.#cursorRow || newCol !== this.#cursorCol) {
+            this.#cursorRow = newRow;
+            this.#cursorCol = newCol;
+            this.#view.setCursor(this.#cursorRow, this.#cursorCol);
+        }
+    }
+
+    #handleCursorAction() {
+        const piece = this.#model.getPiece(this.#cursorRow, this.#cursorCol);
+        if (piece && this.#isOwnPiece(piece)) {
+            this.#handleCheckerClick(this.#cursorRow, this.#cursorCol);
+        } else {
+            this.#handleCellClick(this.#cursorRow, this.#cursorCol);
+        }
     }
 
     #handleCheckerClick(row, col) {
+        if (this.#view.isTransitioning) return;
         this.#view.clearHistoryHighlights();
         const piece = this.#model.getPiece(row, col);
         if (!this.#isOwnPiece(piece)) return;
@@ -96,16 +151,25 @@ export class GameController {
     }
 
     #handleCellClick(row, col) {
+        if (this.#view.isTransitioning) return;
         this.#view.clearHistoryHighlights();
         if (!this.#selectedChecker) return;
 
         const move = this.#validMoves.find(m => m.row === row && m.col === col);
         if (!move) return;
 
-        this.#recordMoveState(move);
-        this.#model.executeMove(this.#selectedChecker, move);
-        this.#processMoveResult();
-        this.#checkWinCondition();
+        this.#view.animateMove(
+            this.#selectedChecker,
+            {row, col},
+            () => {
+                this.#recordMoveState(move);
+                this.#model.executeMove(this.#selectedChecker, move);
+                this.#cursorRow = row;
+                this.#cursorCol = col;
+                this.#processMoveResult();
+                this.#checkWinCondition();
+            }
+        );
     }
 
     #recordMoveState(move) {
@@ -126,6 +190,9 @@ export class GameController {
 
         if (mustJumpPiece) {
             this.#handleMultiJump(mustJumpPiece);
+            this.#cursorRow = mustJumpPiece.row;
+            this.#cursorCol = mustJumpPiece.col;
+            this.#view.setCursor(this.#cursorRow, this.#cursorCol);
         } else {
             this.#deselect();
         }
@@ -164,16 +231,20 @@ export class GameController {
     }
 
     undo() {
-        if (!this.#prevState || this.#gameEnded) return;
+        if (this.#view.isTransitioning || !this.#prevState || this.#gameEnded) return;
 
+        const originalLastMove = this.#lastMove;
         this.#view.animateUndoMove(
-            this.#lastMove.from,
-            this.#lastMove.to,
+            originalLastMove.from,
+            originalLastMove.to,
             () => {
                 this.#model.restoreState(this.#prevState);
                 this.#prevState = null;
                 this.#lastMove = null;
                 this.#gameEnded = false;
+                this.#cursorRow = originalLastMove.from.row;
+                this.#cursorCol = originalLastMove.from.col;
+                
                 this.#notifyUndoStateChange();
                 this.#deselect();
                 this.#init();
@@ -202,6 +273,8 @@ export class GameController {
         this.#prevState = null;
         this.#lastMove = null;
         this.#gameEnded = false;
+        this.#cursorRow = 0;
+        this.#cursorCol = 0;
         this.#notifyUndoStateChange();
         this.#init();
         if (this.#onMoveExecuted) {

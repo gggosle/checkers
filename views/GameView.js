@@ -9,6 +9,10 @@ export class GameView {
     #dragData = null;
     #getSelectedCheckerInfo = null;
 
+    get isTransitioning() {
+        return this.#isTransitioning;
+    }
+
     constructor(boardElement, getSelectedCheckerInfoCallback) {
         this.#boardElement = boardElement;
         this.#getSelectedCheckerInfo = getSelectedCheckerInfoCallback;
@@ -90,7 +94,6 @@ export class GameView {
         
         if (!this.#dragData) return;
 
-        const checkerElement = this.#dragData.element;
         const cellElement = e.target.closest(`.${CSS_BOARD.CELL_CLASS}`);
         if (!cellElement || !cellElement.classList.contains(CSS_BOARD.VALID_MOVE_CLASS)) {
             this.#dragData = null;
@@ -100,11 +103,9 @@ export class GameView {
         const targetRow = parseInt(cellElement.dataset.row);
         const targetCol = parseInt(cellElement.dataset.col);
 
-        this.animatePieceMove(checkerElement, cellElement, () => {
-            if (this.#onCellClick) {
-                this.#onCellClick(targetRow, targetCol);
-            }
-        });
+        if (this.#onCellClick) {
+            this.#onCellClick(targetRow, targetCol);
+        }
 
         this.#dragData = null;
     }
@@ -124,13 +125,17 @@ export class GameView {
         const row = parseInt(cellElement.dataset.row);
         const col = parseInt(cellElement.dataset.col);
         
-        const checkerElement = this.#boardElement.querySelector(`.${CSS_BOARD.HIGHLIGHT_CLASS}`);
-        if (checkerElement && checkerElement.classList.contains(CSS_BOARD.CHECKER_CLASS)) {
-            this.animatePieceMove(checkerElement, cellElement, () => {
-                this.#onCellClick(row, col);
-            });
+        this.#onCellClick(row, col);
+    }
+
+    animateMove(from, to, onComplete) {
+        const checkerElement = this.#boardElement.querySelector(`.cell[data-row="${from.row}"][data-col="${from.col}"] .${CSS_BOARD.CHECKER_CLASS}`);
+        const targetCell = this.#boardElement.querySelector(`.cell[data-row="${to.row}"][data-col="${to.col}"]`);
+
+        if (checkerElement && targetCell) {
+            this.animatePieceMove(checkerElement, targetCell, onComplete);
         } else {
-            this.#onCellClick(row, col);
+            if (onComplete) onComplete();
         }
     }
 
@@ -243,6 +248,18 @@ export class GameView {
 
         if (fromCell) fromCell.classList.add(CSS_HISTORY.HIGHLIGHT_CLASS);
         if (toCell) toCell.classList.add(CSS_HISTORY.HIGHLIGHT_CLASS);
+    }
+
+    setCursor(row, col) {
+        this.clearCursor();
+        const cell = this.#boardElement.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+        if (cell) {
+            cell.classList.add(CSS_BOARD.CURSOR_CLASS);
+        }
+    }
+
+    clearCursor() {
+        this.#boardElement.querySelectorAll(`.${CSS_BOARD.CURSOR_CLASS}`).forEach(c => c.classList.remove(CSS_BOARD.CURSOR_CLASS));
     }
 
     clearHistoryHighlights() {
