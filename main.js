@@ -6,9 +6,11 @@ import { InfoModel } from './models/InfoModel.js';
 import { InfoView } from './views/InfoView.js';
 import { InfoController } from './controllers/InfoController.js';
 import { HistoryView } from './views/HistoryView.js';
+import {CSS_BOARD} from "./constants";
 
 document.addEventListener('DOMContentLoaded', () => {
-    const boardElement = document.getElementById('board');
+    const boardElement = document.getElementById(CSS_BOARD.BOARD_CLASS);
+    const undoBtn = document.getElementById(CSS_BOARD.UNDO_BTN);
     const storage = new Storage();
     const currentState = storage.getStateFromLocalStorage();
     const model = new GameModel();
@@ -46,8 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
     controller.setOnWin((winner) => {
         infoController.notifyWin(winner);
     });
-
-    const undoBtn = document.getElementById('undo-btn');
+    
     if (undoBtn) {
         undoBtn.addEventListener('click', () => {
             controller.undo();

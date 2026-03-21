@@ -10,6 +10,8 @@ export const GAME_RULES = {
 };
 
 export const CSS_BOARD = {
+    BOARD_CLASS: 'board',
+    UNDO_BTN: 'undo-btn',
     CELL_CLASS: 'cell',
     BLACK_CELL_CLASS: 'color-2-cell',
     WHITE_CELL_CLASS: 'color-1-cell',
