@@ -5,6 +5,7 @@ import { Storage } from './models/Storage.js';
 import { InfoModel } from './models/InfoModel.js';
 import { InfoView } from './views/InfoView.js';
 import { InfoController } from './controllers/InfoController.js';
+import { HistoryView } from './views/HistoryView.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const boardElement = document.getElementById('board');
@@ -21,6 +22,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const infoModel = new InfoModel(model.currentTurnDir);
     const infoView = new InfoView();
     const infoController = new InfoController(infoModel, infoView);
+
+    const historyView = new HistoryView((move) => {
+        view.highlightHistoryMove(move);
+    });
+
+    controller.setOnMoveExecuted((history) => {
+        historyView.render(history);
+    });
+
+    controller.setOnUndoStateChange((canUndo) => {
+        undoBtn.disabled = !canUndo;
+        historyView.clearSelection();
+        view.clearHistoryHighlights();
+    });
+
+    historyView.render(model.moveHistory);
+
     controller.setOnTurnChange((newDir) => {
         infoController.updateTurn(newDir);
     });
@@ -31,9 +49,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const undoBtn = document.getElementById('undo-btn');
     if (undoBtn) {
-        controller.setOnUndoStateChange((canUndo) => {
-            undoBtn.disabled = !canUndo;
-        });
         undoBtn.addEventListener('click', () => {
             controller.undo();
         });

@@ -11,6 +11,7 @@ export class GameController {
     #gameEnded = false;
     #onUndoStateChange = null;
     #onTurnChange = null;
+    #onMoveExecuted = null;
     #onWin = null;
 
     constructor(model, view, storage) {
@@ -18,6 +19,10 @@ export class GameController {
         this.#view = view;
         this.#storage = storage;
         this.#init();
+    }
+
+    setOnMoveExecuted(callback) {
+        this.#onMoveExecuted = callback;
     }
 
     setOnUndoStateChange(callback) {
@@ -46,6 +51,7 @@ export class GameController {
     }
 
     #handleCheckerClick(row, col) {
+        this.#view.clearHistoryHighlights();
         const piece = this.#model.getPiece(row, col);
         if (!this.#isOwnPiece(piece)) return;
 
@@ -90,6 +96,7 @@ export class GameController {
     }
 
     #handleCellClick(row, col) {
+        this.#view.clearHistoryHighlights();
         if (!this.#selectedChecker) return;
 
         const move = this.#validMoves.find(m => m.row === row && m.col === col);
@@ -121,6 +128,10 @@ export class GameController {
             this.#handleMultiJump(mustJumpPiece);
         } else {
             this.#deselect();
+        }
+
+        if (this.#onMoveExecuted) {
+            this.#onMoveExecuted(this.#model.moveHistory);
         }
 
         if (this.#onTurnChange) {
@@ -166,6 +177,9 @@ export class GameController {
                 this.#notifyUndoStateChange();
                 this.#deselect();
                 this.#init();
+                if (this.#onMoveExecuted) {
+                    this.#onMoveExecuted(this.#model.moveHistory);
+                }
                 if (this.#onTurnChange) {
                     this.#onTurnChange(this.#model.currentTurnDir);
                 }
@@ -190,6 +204,9 @@ export class GameController {
         this.#gameEnded = false;
         this.#notifyUndoStateChange();
         this.#init();
+        if (this.#onMoveExecuted) {
+            this.#onMoveExecuted(this.#model.moveHistory);
+        }
         if (this.#onTurnChange) {
             this.#onTurnChange(this.#model.currentTurnDir);
         }

@@ -1,5 +1,5 @@
 import { Color } from '../models/Color.js';
-import {CSS_BOARD} from "../constants.js";
+import {CSS_BOARD, CSS_HISTORY} from "../constants.js";
 
 export class GameView {
     #boardElement;
@@ -231,6 +231,22 @@ export class GameView {
     clearHighlights() {
         this.#boardElement.querySelectorAll(`.${CSS_BOARD.HIGHLIGHT_CLASS}`).forEach(c => c.classList.remove(CSS_BOARD.HIGHLIGHT_CLASS));
         this.#boardElement.querySelectorAll(`.${CSS_BOARD.VALID_MOVE_CLASS}`).forEach(c => c.classList.remove(CSS_BOARD.VALID_MOVE_CLASS));
+        this.clearHistoryHighlights();
+    }
+
+    highlightHistoryMove(move) {
+        this.clearHistoryHighlights();
+        if (!move) return;
+
+        const fromCell = this.#boardElement.querySelector(`.cell[data-row="${move.from.row}"][data-col="${move.from.col}"]`);
+        const toCell = this.#boardElement.querySelector(`.cell[data-row="${move.to.row}"][data-col="${move.to.col}"]`);
+
+        if (fromCell) fromCell.classList.add(CSS_HISTORY.HIGHLIGHT_CLASS);
+        if (toCell) toCell.classList.add(CSS_HISTORY.HIGHLIGHT_CLASS);
+    }
+
+    clearHistoryHighlights() {
+        this.#boardElement.querySelectorAll(`.${CSS_HISTORY.HIGHLIGHT_CLASS}`).forEach(c => c.classList.remove(CSS_HISTORY.HIGHLIGHT_CLASS));
     }
 
     animateUndoMove(from, to, onComplete) {

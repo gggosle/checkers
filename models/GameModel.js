@@ -7,12 +7,14 @@ export class GameModel {
     #currentTurnDir;
     #mustJumpPiece;
     #hasJumpsAvailable;
+    #moveHistory;
 
     constructor() {
         this.#board = new Board();
         this.#currentTurnDir = GAME_RULES.MOVE_DIR_UP;
         this.#mustJumpPiece = null;
         this.#hasJumpsAvailable = false;
+        this.#moveHistory = [];
     }
     
     get boardClone() {
@@ -33,6 +35,17 @@ export class GameModel {
 
     get mustJumpPiece() {
         return this.#mustJumpPiece;
+    }
+
+    get moveHistory() {
+        return [...this.#moveHistory];
+    }
+
+    static toAlgebraic(row, col) {
+        const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+        const letter = letters[col];
+        const rank = GAME_CONFIG.BOARD_SIZE - row;
+        return `${letter}${rank}`;
     }
 
     getValidMoves(row, col) {
@@ -134,6 +147,13 @@ export class GameModel {
         const piece = this.#board.getPiece(from.row, from.col);
         if (!piece) return false;
 
+        const notation = this.#generateNotation(from, toMove);
+        this.#moveHistory.push({
+            notation,
+            from: {...from},
+            to: {row: toMove.row, col: toMove.col}
+        });
+
         this.#board.movePiece(piece, from, toMove);
         if (toMove.type === MoveType.JUMP) {
             this.#board.removePiece(toMove.captured);
@@ -142,6 +162,15 @@ export class GameModel {
         const promoted = this.#checkPromotion(piece, toMove.row);
         this.#handlePostMove(piece, toMove, promoted);
         return true;
+    }
+
+    #generateNotation(from, to) {
+        const turnNumber = Math.floor(this.#moveHistory.length / 2) + 1;
+        const prefix = this.#currentTurnDir === GAME_RULES.MOVE_DIR_UP ? `${turnNumber}. ` : '';
+        const fromAlg = GameModel.toAlgebraic(from.row, from.col);
+        const toAlg = GameModel.toAlgebraic(to.row, to.col);
+        const separator = to.type === MoveType.JUMP ? 'x' : '-';
+        return `${prefix}${fromAlg}${separator}${toAlg}`;
     }
 
     #checkPromotion(piece, row) {
@@ -187,7 +216,8 @@ export class GameModel {
             board: this.#board.getBoardClone(),
             currentTurnDir: this.#currentTurnDir,
             mustJumpPiece: this.#mustJumpPiece ? {...this.#mustJumpPiece} : null,
-            hasJumpsAvailable: this.#hasJumpsAvailable
+            hasJumpsAvailable: this.#hasJumpsAvailable,
+            moveHistory: [...this.#moveHistory]
         };
     }
 
@@ -196,6 +226,7 @@ export class GameModel {
         this.#currentTurnDir = state.currentTurnDir;
         this.#mustJumpPiece = state.mustJumpPiece;
         this.#hasJumpsAvailable = state.hasJumpsAvailable;
+        this.#moveHistory = state.moveHistory || [];
     }
 
     reset() {
@@ -203,5 +234,6 @@ export class GameModel {
         this.#currentTurnDir = GAME_RULES.MOVE_DIR_UP;
         this.#mustJumpPiece = null;
         this.#hasJumpsAvailable = false;
+        this.#moveHistory = [];
     }
 }

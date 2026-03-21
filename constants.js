@@ -29,3 +29,10 @@ export const CSS_INFO = {
     PLAY_AGAIN_BTN_ID: 'play-again-btn',
     ACTIVE_CLASS: 'active',
 };
+
+export const CSS_HISTORY = {
+    LIST_ID: 'history-list',
+    ITEM_CLASS: 'history-item',
+    SELECTED_CLASS: 'selected',
+    HIGHLIGHT_CLASS: 'history-highlight',
+};

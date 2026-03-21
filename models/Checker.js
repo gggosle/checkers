@@ -42,6 +42,16 @@ export class Checker {
         this.#isKing = true;
     }
 
+    toJSON() {
+        return {
+            color: this.#color,
+            row: this.#row,
+            col: this.#col,
+            direction: this.#direction,
+            isKing: this.#isKing
+        };
+    }
+
     clone() {
         return new Checker(this.#color, this.#row, this.#col, this.#direction, this.#isKing);
     }
