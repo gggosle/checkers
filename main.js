@@ -6,7 +6,7 @@ import { InfoModel } from './models/InfoModel.js';
 import { InfoView } from './views/InfoView.js';
 import { InfoController } from './controllers/InfoController.js';
 import { HistoryView } from './views/HistoryView.js';
-import {CSS_BOARD} from "./constants";
+import {CSS_BOARD} from "./constants.js";
 
 document.addEventListener('DOMContentLoaded', () => {
     const boardElement = document.getElementById(CSS_BOARD.BOARD_CLASS);
@@ -16,7 +16,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const model = new GameModel();
 
     if (currentState) {
-        model.restoreState(currentState);
+        try {
+            model.restoreState(currentState);
+        } catch (e) {
+            console.error('Failed to restore state from localStorage, clearing it.', e);
+            storage.clearSavedState();
+        }
     }
 
     const view = new GameView(boardElement, () => controller.getSelectedChecker());

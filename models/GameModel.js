@@ -223,7 +223,7 @@ export class GameModel {
 
     getLiveState() {
         return {
-            board: this.#board,
+            board: this.#board.getOriginalBoard(),
             currentTurnDir: this.#currentTurnDir,
             mustJumpPiece: this.#mustJumpPiece,
             hasJumpsAvailable: this.#hasJumpsAvailable,
@@ -232,6 +232,7 @@ export class GameModel {
     }
 
     restoreState(state) {
+        if (!state || !state.board) return;
         this.#board.restoreBoard(state.board);
         this.#currentTurnDir = state.currentTurnDir;
         this.#mustJumpPiece = state.mustJumpPiece;
