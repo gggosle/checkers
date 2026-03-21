@@ -111,7 +111,7 @@ export class GameController {
     #recordMoveState(move) {
         if (this.#gameEnded) return;
 
-        this.#prevState = this.#model.captureState();
+        this.#prevState = this.#model.getClonedState();
         this.#lastMove = {
             from: {row: this.#selectedChecker.row, col: this.#selectedChecker.col},
             to: {row: move.row, col: move.col},
@@ -141,7 +141,7 @@ export class GameController {
     }
 
     #saveStateToLocalStorage() {
-        this.#storage.saveToLocalStorage(this.#model.captureState());
+        this.#storage.saveToLocalStorage(this.#model.getLiveState());
     }
 
     #checkWinCondition() {

@@ -211,13 +211,23 @@ export class GameModel {
         return false;
     }
 
-    captureState() {
+    getClonedState() {
         return {
             board: this.#board.getBoardClone(),
             currentTurnDir: this.#currentTurnDir,
             mustJumpPiece: this.#mustJumpPiece ? {...this.#mustJumpPiece} : null,
             hasJumpsAvailable: this.#hasJumpsAvailable,
-            moveHistory: [...this.#moveHistory]
+            moveHistory: [...this.#moveHistory],
+        };
+    }
+
+    getLiveState() {
+        return {
+            board: this.#board,
+            currentTurnDir: this.#currentTurnDir,
+            mustJumpPiece: this.#mustJumpPiece,
+            hasJumpsAvailable: this.#hasJumpsAvailable,
+            moveHistory: this.#moveHistory,
         };
     }
 
