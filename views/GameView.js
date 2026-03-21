@@ -9,6 +9,10 @@ export class GameView {
     #dragData = null;
     #getSelectedCheckerInfo = null;
 
+    get isTransitioning() {
+        return this.#isTransitioning;
+    }
+
     constructor(boardElement, getSelectedCheckerInfoCallback) {
         this.#boardElement = boardElement;
         this.#getSelectedCheckerInfo = getSelectedCheckerInfoCallback;
@@ -243,6 +247,18 @@ export class GameView {
 
         if (fromCell) fromCell.classList.add(CSS_HISTORY.HIGHLIGHT_CLASS);
         if (toCell) toCell.classList.add(CSS_HISTORY.HIGHLIGHT_CLASS);
+    }
+
+    setCursor(row, col) {
+        this.clearCursor();
+        const cell = this.#boardElement.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+        if (cell) {
+            cell.classList.add(CSS_BOARD.CURSOR_CLASS);
+        }
+    }
+
+    clearCursor() {
+        this.#boardElement.querySelectorAll(`.${CSS_BOARD.CURSOR_CLASS}`).forEach(c => c.classList.remove(CSS_BOARD.CURSOR_CLASS));
     }
 
     clearHistoryHighlights() {

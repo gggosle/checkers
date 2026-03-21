@@ -21,6 +21,7 @@ export const CSS_BOARD = {
     KING_CLASS: 'king',
     HIGHLIGHT_CLASS: 'highlight',
     VALID_MOVE_CLASS: 'valid-move',
+    CURSOR_CLASS: 'keyboard-cursor',
 };
 
 export const CSS_INFO = {
