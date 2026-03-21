@@ -48,7 +48,7 @@
 }
 
 body {
-    font-family: var(--font-main);
+    font-family: var(--font-main), serif;
     background-color: var(--bg-color);
     background-image: 
         radial-gradient(circle at 20% 80%, rgba(74, 124, 89, 0.1) 0%, transparent 50%),
@@ -185,7 +185,7 @@ body {
     border-radius: var(--border-radius-sm);
     cursor: pointer;
     transition: all var(--transition-fast);
-    font-family: var(--font-mono);
+    font-family: var(--font-mono), serif;
     font-weight: 600;
 }
 
