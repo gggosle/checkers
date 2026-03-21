@@ -10,6 +10,8 @@ export const GAME_RULES = {
 };
 
 export const CSS_BOARD = {
+    BOARD_CLASS: 'board',
+    UNDO_BTN: 'undo-btn',
     CELL_CLASS: 'cell',
     BLACK_CELL_CLASS: 'color-2-cell',
     WHITE_CELL_CLASS: 'color-1-cell',
@@ -28,4 +30,11 @@ export const CSS_INFO = {
     WINNER_TEXT_ID: 'winner-text',
     PLAY_AGAIN_BTN_ID: 'play-again-btn',
     ACTIVE_CLASS: 'active',
+};
+
+export const CSS_HISTORY = {
+    LIST_ID: 'history-list',
+    ITEM_CLASS: 'history-item',
+    SELECTED_CLASS: 'selected',
+    HIGHLIGHT_CLASS: 'history-highlight',
 };

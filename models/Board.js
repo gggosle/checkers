@@ -15,7 +15,12 @@ export class Board {
         return this.#board.map(row => row.map(cell => cell ? cell.clone() : null));
     }
 
+    getOriginalBoard() {
+        return this.#board;
+    }
+
     restoreBoard(boardData) {
+        if (!Array.isArray(boardData)) return;
         this.#board = boardData.map(row => row.map(cell => {
             if (!cell) return null;
             return cell instanceof Checker ? cell.clone() : Checker.fromJSON(cell);
