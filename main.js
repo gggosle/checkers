@@ -6,13 +6,14 @@ import { InfoModel } from './models/InfoModel.js';
 import { InfoView } from './views/InfoView.js';
 import { InfoController } from './controllers/InfoController.js';
 import { HistoryView } from './views/HistoryView.js';
-import {CSS_BOARD} from "./constants.js";
+import {CSS_BOARD, GAME_CONFIG} from "./constants.js";
 
 document.addEventListener('DOMContentLoaded', () => {
     const boardElement = document.getElementById(CSS_BOARD.BOARD_CLASS);
     const undoBtn = document.getElementById(CSS_BOARD.UNDO_BTN);
     const storage = new Storage();
     const currentState = storage.getStateFromLocalStorage();
+    const savedState = storage.getStateFromLocalStorage();
     const model = new GameModel();
 
     if (currentState) {
@@ -26,9 +27,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const view = new GameView(boardElement, () => controller.getSelectedChecker());
     const controller = new GameController(model, view, storage);
-    const infoModel = new InfoModel(model.currentTurnDir);
+    const infoModel = new InfoModel(model.currentTurnDir, GAME_CONFIG.DEFAULT_GAME_TIME);
+    if (savedState && savedState.playerTimes) {
+        infoModel.setTimePlayer1(savedState.playerTimes[1]);
+        infoModel.setTimePlayer2(savedState.playerTimes[2]);
+    }
     const infoView = new InfoView();
     const infoController = new InfoController(infoModel, infoView);
+
+    controller.setOnTimerUpdate((playerNum, seconds) => {
+        infoController.updateTimer(playerNum, seconds);
+    });
 
     const historyView = new HistoryView((move) => {
         view.highlightHistoryMove(move);
@@ -62,6 +71,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     infoController.setOnPlayAgain(() => {
         controller.reset();
-        infoController.reset(model.currentTurnDir);
+        infoController.reset(model.currentTurnDir, GAME_CONFIG.DEFAULT_GAME_TIME);
     });
 });

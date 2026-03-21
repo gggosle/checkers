@@ -11,17 +11,31 @@ export class GameController {
     #gameEnded = false;
     #cursorRow = 0;
     #cursorCol = 0;
+    #playerTimes = { 1: GAME_CONFIG.DEFAULT_GAME_TIME, 2: GAME_CONFIG.DEFAULT_GAME_TIME };
+    #timerInterval = null;
     #onUndoStateChange = null;
     #onTurnChange = null;
     #onMoveExecuted = null;
     #onWin = null;
+    #onTimerUpdate = null;
 
     constructor(model, view, storage) {
         this.#model = model;
         this.#view = view;
         this.#storage = storage;
+        
+        const savedState = this.#storage.getStateFromLocalStorage();
+        if (savedState && savedState.playerTimes) {
+            this.#playerTimes = savedState.playerTimes;
+        }
+
         this.#init();
         this.#initKeyboardEvents();
+        this.#startTimer();
+    }
+
+    setOnTimerUpdate(callback) {
+        this.#onTimerUpdate = callback;
     }
 
     setOnMoveExecuted(callback) {
@@ -158,6 +172,7 @@ export class GameController {
         const move = this.#validMoves.find(m => m.row === row && m.col === col);
         if (!move) return;
 
+        this.#stopTimer();
         this.#view.animateMove(
             this.#selectedChecker,
             {row, col},
@@ -195,6 +210,7 @@ export class GameController {
             this.#view.setCursor(this.#cursorRow, this.#cursorCol);
         } else {
             this.#deselect();
+            this.#startTimer();
         }
 
         if (this.#onMoveExecuted) {
@@ -208,19 +224,25 @@ export class GameController {
     }
 
     #saveStateToLocalStorage() {
-        this.#storage.saveToLocalStorage(this.#model.getLiveState());
+        const liveState = this.#model.getLiveState();
+        liveState.playerTimes = this.#playerTimes;
+        this.#storage.saveToLocalStorage(liveState);
     }
 
     #checkWinCondition() {
         const activeDir = this.#model.currentTurnDir;
         if (!this.#model.hasAnyValidMoves(activeDir)) {
-            this.#gameEnded = true;
-            this.#notifyUndoStateChange();
-            this.#storage.clearSavedState();
-            const winner = activeDir === GAME_RULES.MOVE_DIR_UP ? 'PLAYER_2' : 'PLAYER_1';
-            if (this.#onWin) {
-                this.#onWin(winner);
-            }
+            this.#handleWin(activeDir === GAME_RULES.MOVE_DIR_UP ? 'PLAYER_2' : 'PLAYER_1');
+        }
+    }
+
+    #handleWin(winner) {
+        this.#gameEnded = true;
+        this.#stopTimer();
+        this.#notifyUndoStateChange();
+        this.#storage.clearSavedState();
+        if (this.#onWin) {
+            this.#onWin(winner);
         }
     }
 
@@ -233,6 +255,7 @@ export class GameController {
     undo() {
         if (this.#view.isTransitioning || !this.#prevState || this.#gameEnded) return;
 
+        this.#stopTimer();
         const originalLastMove = this.#lastMove;
         this.#view.animateUndoMove(
             originalLastMove.from,
@@ -248,6 +271,7 @@ export class GameController {
                 this.#notifyUndoStateChange();
                 this.#deselect();
                 this.#init();
+                this.#startTimer();
                 if (this.#onMoveExecuted) {
                     this.#onMoveExecuted(this.#model.moveHistory);
                 }
@@ -275,14 +299,46 @@ export class GameController {
         this.#gameEnded = false;
         this.#cursorRow = 0;
         this.#cursorCol = 0;
+        this.#playerTimes = { 1: GAME_CONFIG.DEFAULT_GAME_TIME, 2: GAME_CONFIG.DEFAULT_GAME_TIME };
+        this.#stopTimer();
         this.#notifyUndoStateChange();
         this.#init();
+        this.#startTimer();
         if (this.#onMoveExecuted) {
             this.#onMoveExecuted(this.#model.moveHistory);
         }
         if (this.#onTurnChange) {
             this.#onTurnChange(this.#model.currentTurnDir);
         }
+    }
 
+    #startTimer() {
+        this.#stopTimer();
+        if (this.#gameEnded) return;
+
+        this.#timerInterval = setInterval(() => {
+            const activePlayer = this.#model.currentTurnDir === GAME_RULES.MOVE_DIR_UP ? 1 : 2;
+            this.#playerTimes[activePlayer]--;
+
+            if (this.#onTimerUpdate) {
+                this.#onTimerUpdate(activePlayer, this.#playerTimes[activePlayer]);
+            }
+
+            if (this.#playerTimes[activePlayer] <= 0) {
+                this.#handleTimeOut(activePlayer);
+            }
+        }, 1000);
+    }
+
+    #stopTimer() {
+        if (this.#timerInterval) {
+            clearInterval(this.#timerInterval);
+            this.#timerInterval = null;
+        }
+    }
+
+    #handleTimeOut(timedOutPlayer) {
+        const winner = timedOutPlayer === 1 ? 'PLAYER_2' : 'PLAYER_1';
+        this.#handleWin(winner);
     }
 }
