@@ -1,7 +1,7 @@
 import { GameModel } from './models/GameModel.js';
 import { GameView } from './views/GameView.js';
 import { GameController } from './controllers/GameController.js';
-import { Storage } from './utils/Storage.js';
+import { Storage } from './models/Storage.js';
 import { InfoModel } from './models/InfoModel.js';
 import { InfoView } from './views/InfoView.js';
 import { InfoController } from './controllers/InfoController.js';
