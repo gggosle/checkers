@@ -4,6 +4,7 @@ export class GameController {
     #model;
     #view;
     #storage;
+    #timerController;
     #selectedChecker = null;
     #validMoves = [];
     #prevState = null;
@@ -16,12 +17,17 @@ export class GameController {
     #onMoveExecuted = null;
     #onWin = null;
 
-    constructor(model, view, storage) {
+    constructor(model, view, storage, timerController) {
         this.#model = model;
         this.#view = view;
         this.#storage = storage;
+        this.#timerController = timerController;
+        
+        this.#timerController.setOnTimeout((playerNum) => this.#handleTimeOut(playerNum));
+
         this.#init();
         this.#initKeyboardEvents();
+        this.#startTimer();
     }
 
     setOnMoveExecuted(callback) {
@@ -158,6 +164,7 @@ export class GameController {
         const move = this.#validMoves.find(m => m.row === row && m.col === col);
         if (!move) return;
 
+        this.#stopTimer();
         this.#view.animateMove(
             this.#selectedChecker,
             {row, col},
@@ -195,6 +202,7 @@ export class GameController {
             this.#view.setCursor(this.#cursorRow, this.#cursorCol);
         } else {
             this.#deselect();
+            this.#startTimer();
         }
 
         if (this.#onMoveExecuted) {
@@ -208,19 +216,25 @@ export class GameController {
     }
 
     #saveStateToLocalStorage() {
-        this.#storage.saveToLocalStorage(this.#model.getLiveState());
+        const liveState = this.#model.getLiveState();
+        liveState.playerTimes = this.#timerController.playerTimes;
+        this.#storage.saveToLocalStorage(liveState);
     }
 
     #checkWinCondition() {
         const activeDir = this.#model.currentTurnDir;
         if (!this.#model.hasAnyValidMoves(activeDir)) {
-            this.#gameEnded = true;
-            this.#notifyUndoStateChange();
-            this.#storage.clearSavedState();
-            const winner = activeDir === GAME_RULES.MOVE_DIR_UP ? 'PLAYER_2' : 'PLAYER_1';
-            if (this.#onWin) {
-                this.#onWin(winner);
-            }
+            this.#handleWin(activeDir === GAME_RULES.MOVE_DIR_UP ? 'PLAYER_2' : 'PLAYER_1');
+        }
+    }
+
+    #handleWin(winner) {
+        this.#gameEnded = true;
+        this.#stopTimer();
+        this.#notifyUndoStateChange();
+        this.#storage.clearSavedState();
+        if (this.#onWin) {
+            this.#onWin(winner);
         }
     }
 
@@ -233,6 +247,7 @@ export class GameController {
     undo() {
         if (this.#view.isTransitioning || !this.#prevState || this.#gameEnded) return;
 
+        this.#stopTimer();
         const originalLastMove = this.#lastMove;
         this.#view.animateUndoMove(
             originalLastMove.from,
@@ -248,6 +263,7 @@ export class GameController {
                 this.#notifyUndoStateChange();
                 this.#deselect();
                 this.#init();
+                this.#startTimer();
                 if (this.#onMoveExecuted) {
                     this.#onMoveExecuted(this.#model.moveHistory);
                 }
@@ -275,14 +291,30 @@ export class GameController {
         this.#gameEnded = false;
         this.#cursorRow = 0;
         this.#cursorCol = 0;
+        this.#timerController.reset();
         this.#notifyUndoStateChange();
         this.#init();
+        this.#startTimer();
         if (this.#onMoveExecuted) {
             this.#onMoveExecuted(this.#model.moveHistory);
         }
         if (this.#onTurnChange) {
             this.#onTurnChange(this.#model.currentTurnDir);
         }
+    }
 
+    #startTimer() {
+        if (this.#gameEnded) return;
+        const activePlayerNum = this.#model.currentTurnDir === GAME_RULES.MOVE_DIR_UP ? 1 : 2;
+        this.#timerController.start(activePlayerNum);
+    }
+
+    #stopTimer() {
+        this.#timerController.stop();
+    }
+
+    #handleTimeOut(timedOutPlayer) {
+        const winner = timedOutPlayer === 1 ? 'PLAYER_2' : 'PLAYER_1';
+        this.#handleWin(winner);
     }
 }

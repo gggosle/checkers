@@ -6,7 +6,10 @@ import { InfoModel } from './models/InfoModel.js';
 import { InfoView } from './views/InfoView.js';
 import { InfoController } from './controllers/InfoController.js';
 import { HistoryView } from './views/HistoryView.js';
-import {CSS_BOARD} from "./constants.js";
+import {CSS_BOARD, GAME_CONFIG} from "./constants.js";
+import { TimerModel } from './models/TimerModel.js';
+import { TimerView } from './views/TimerView.js';
+import { TimerController } from './controllers/TimerController.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const boardElement = document.getElementById(CSS_BOARD.BOARD_CLASS);
@@ -24,9 +27,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    const timerModel = new TimerModel(currentState?.playerTimes);
+    const timerView = new TimerView();
+    const timerController = new TimerController(timerModel, timerView);
+
     const view = new GameView(boardElement, () => controller.getSelectedChecker());
-    const controller = new GameController(model, view, storage);
-    const infoModel = new InfoModel(model.currentTurnDir);
+    const controller = new GameController(model, view, storage, timerController);
+    const infoModel = new InfoModel(model.currentTurnDir, GAME_CONFIG.DEFAULT_GAME_TIME);
     const infoView = new InfoView();
     const infoController = new InfoController(infoModel, infoView);
 
@@ -62,6 +69,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     infoController.setOnPlayAgain(() => {
         controller.reset();
-        infoController.reset(model.currentTurnDir);
+        historyView.clear();
     });
 });

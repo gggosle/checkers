@@ -1,6 +1,7 @@
 export const GAME_CONFIG = {
     BOARD_SIZE: 8,
     LOCAL_STORAGE_STATE_KEY: 'checkers_state',
+    DEFAULT_GAME_TIME: 60,
 };
 
 export const GAME_RULES = {
@@ -31,6 +32,8 @@ export const CSS_INFO = {
     WINNER_TEXT_ID: 'winner-text',
     PLAY_AGAIN_BTN_ID: 'play-again-btn',
     ACTIVE_CLASS: 'active',
+    TIMER_PLAYER_1_ID: 'timer-player-1',
+    TIMER_PLAYER_2_ID: 'timer-player-2',
 };
 
 export const CSS_HISTORY = {
