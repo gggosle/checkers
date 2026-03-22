@@ -1,5 +1,3 @@
-import {GAME_RULES} from "../constants.js";
-
 export class InfoController {
     #model;
     #view;
@@ -10,26 +8,26 @@ export class InfoController {
         this.updateTurnDisplay();
     }
 
-    updateTurn(newDir) {
-        this.#model.setCurrentTurnDir(newDir);
+    updateTurn(player) {
+        this.#model.setCurrentPlayer(player);
         this.updateTurnDisplay();
     }
 
     updateTurnDisplay() {
-        const playerNum = this.#model.currentTurnDir === GAME_RULES.MOVE_DIR_UP ? 1 : 2;
-        this.#view.updateTurnDisplay(playerNum);
+        const player = this.#model.currentPlayer;
+        this.#view.updateTurnDisplay(player.color, player.name);
     }
 
-    notifyWin(winner) {
-        this.#view.showWinModal(winner);
+    notifyWin(player) {
+        this.#view.showWinModal(player.name);
     }
 
     setOnPlayAgain(callback) {
         this.#view.setOnPlayAgain(callback);
     }
 
-    reset(initialTurnDir) {
-        this.#model.setCurrentTurnDir(initialTurnDir);
+    reset(initialPlayer) {
+        this.#model.setCurrentPlayer(initialPlayer);
         this.updateTurnDisplay();
         this.#view.hideWinModal();
     }

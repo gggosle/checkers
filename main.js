@@ -1,19 +1,19 @@
 import { GameModel } from './models/GameModel.js';
 import { GameView } from './views/GameView.js';
 import { GameController } from './controllers/GameController.js';
-import { Storage } from './models/Storage.js';
+import { Storage } from './services/Storage.js';
 import { InfoModel } from './models/InfoModel.js';
 import { InfoView } from './views/InfoView.js';
 import { InfoController } from './controllers/InfoController.js';
 import { HistoryView } from './views/HistoryView.js';
-import {CSS_BOARD, GAME_CONFIG} from "./constants.js";
+import {CSS_BOARD} from "./constants.js";
 import { TimerModel } from './models/TimerModel.js';
 import { TimerView } from './views/TimerView.js';
 import { TimerController } from './controllers/TimerController.js';
+import { UndoController } from './controllers/UndoController.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const boardElement = document.getElementById(CSS_BOARD.BOARD_CLASS);
-    const undoBtn = document.getElementById(CSS_BOARD.UNDO_BTN);
     const storage = new Storage();
     const currentState = storage.getStateFromLocalStorage();
     const model = new GameModel();
@@ -31,9 +31,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const timerView = new TimerView();
     const timerController = new TimerController(timerModel, timerView);
 
+    const undoController = new UndoController(CSS_BOARD.UNDO_BTN, () => {
+        controller.undo();
+    });
+
     const view = new GameView(boardElement, () => controller.getSelectedChecker());
-    const controller = new GameController(model, view, storage, timerController);
-    const infoModel = new InfoModel(model.currentTurnDir, GAME_CONFIG.DEFAULT_GAME_TIME);
+    const controller = new GameController(model, view, storage, timerController, undoController);
+    const infoModel = new InfoModel(model.currentPlayer);
     const infoView = new InfoView();
     const infoController = new InfoController(infoModel, infoView);
 
@@ -45,30 +49,18 @@ document.addEventListener('DOMContentLoaded', () => {
         historyView.render(history);
     });
 
-    controller.setOnUndoStateChange((canUndo) => {
-        undoBtn.disabled = !canUndo;
-        historyView.clearSelection();
-        view.clearHistoryHighlights();
-    });
-
     historyView.render(model.moveHistory);
 
-    controller.setOnTurnChange((newDir) => {
-        infoController.updateTurn(newDir);
+    controller.setOnTurnChange((player) => {
+        infoController.updateTurn(player);
     });
 
-    controller.setOnWin((winner) => {
-        infoController.notifyWin(winner);
+    controller.setOnWin((winnerPlayer) => {
+        infoController.notifyWin(winnerPlayer);
     });
     
-    if (undoBtn) {
-        undoBtn.addEventListener('click', () => {
-            controller.undo();
-        });
-    }
-
     infoController.setOnPlayAgain(() => {
         controller.reset();
-        historyView.clear();
+        infoController.reset(model.currentPlayer);
     });
 });

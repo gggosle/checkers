@@ -1,20 +1,33 @@
 import {MoveType} from './MoveType.js';
 import {Board} from './Board.js';
-import {GAME_CONFIG, GAME_RULES} from "../constants.js";
+import {GAME_CONFIG} from "../constants.js";
+import {PlayerGenerator} from "../services/PlayerGenerator.js";
+import {Player} from "./Player.js";
+import {HistoryModel} from "./HistoryModel.js";
+import {MoveEngine} from "./MoveEngine.js";
 
 export class GameModel {
     #board;
-    #currentTurnDir;
+    #players;
+    #currentPlayer;
     #mustJumpPiece;
     #hasJumpsAvailable;
-    #moveHistory;
+    #history;
+    #moveEngine;
 
     constructor() {
         this.#board = new Board();
-        this.#currentTurnDir = GAME_RULES.MOVE_DIR_UP;
+        this.#players = PlayerGenerator.generatePlayers();
+        this.#currentPlayer = this.#decideFirstPlayer();
         this.#mustJumpPiece = null;
         this.#hasJumpsAvailable = false;
-        this.#moveHistory = [];
+        this.#history = new HistoryModel();
+        this.#moveEngine = new MoveEngine(this.#board);
+    }
+
+    #decideFirstPlayer() {
+        const randomIndex = Math.floor(Math.random() * this.#players.length);
+        return this.#players[randomIndex];
     }
     
     get boardClone() {
@@ -30,7 +43,15 @@ export class GameModel {
     }
 
     get currentTurnDir() {
-        return this.#currentTurnDir;
+        return this.#currentPlayer.moveDir;
+    }
+
+    get currentPlayer() {
+        return this.#currentPlayer;
+    }
+
+    get players() {
+        return this.#players;
     }
 
     get mustJumpPiece() {
@@ -38,121 +59,24 @@ export class GameModel {
     }
 
     get moveHistory() {
-        return [...this.#moveHistory];
-    }
-
-    static toAlgebraic(row, col) {
-        const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-        const letter = letters[col];
-        const rank = GAME_CONFIG.BOARD_SIZE - row;
-        return `${letter}${rank}`;
+        return this.#history.moves;
     }
 
     getValidMoves(row, col) {
-        const piece = this.#board.getPiece(row, col);
-        if (!piece || piece.direction !== this.#currentTurnDir) return [];
-
-        if (this.#mustJumpPiece && (this.#mustJumpPiece.row !== row || this.#mustJumpPiece.col !== col)) {
-            return [];
-        }
-
-        const moves = this.#calculatePotentialMoves(row, col);
-
-        if (this.#hasJumpsAvailable) {
-            return moves.filter(m => m.type === MoveType.JUMP);
-        }
-
-        return moves;
-    }
-
-    #calculatePotentialMoves(row, col) {
-        const piece = this.#board.getPiece(row, col);
-        if (!piece) return [];
-
-        const moves = [];
-        this.#forEachPossibleDirection(piece, (dr, dc) => {
-            const move = this.#calculateTargetMove(piece, row, col, dr, dc);
-            if (move) moves.push(move);
-        });
-
-        return moves;
-    }
-
-    #hasJumpAvailable(row, col) {
-        const piece = this.#board.getPiece(row, col);
-        if (!piece) return false;
-
-        let hasJump = false;
-        this.#forEachPossibleDirection(piece, (dr, dc) => {
-            if (hasJump) return;
-            const move = this.#calculateTargetMove(piece, row, col, dr, dc);
-            if (move?.type === MoveType.JUMP) hasJump = true;
-        });
-
-        return hasJump;
-    }
-
-    #forEachPossibleDirection(piece, callback) {
-        const directions = piece.isKing ? [1, -1] : [piece.direction];
-        for (const dr of directions) {
-            for (const dc of [1, -1]) {
-                callback(dr, dc);
-            }
-        }
-    }
-
-    #calculateTargetMove(piece, row, col, dr, dc) {
-        const targetRow = row + dr;
-        const targetCol = col + dc;
-        if (!this.#board.isInBounds(targetRow, targetCol)) return null;
-
-        const targetPiece = this.#board.getPiece(targetRow, targetCol);
-        if (!targetPiece) return {row: targetRow, col: targetCol, type: MoveType.MOVE};
-
-        return this.#tryCalculateJump(piece, targetPiece, dr, dc);
-    }
-
-    #tryCalculateJump(piece, targetPiece, dr, dc) {
-        if (targetPiece.direction === piece.direction) return null;
-
-        const jumpRow = targetPiece.row + dr;
-        const jumpCol = targetPiece.col + dc;
-
-        if (this.#board.isInBounds(jumpRow, jumpCol) && !this.#board.getPiece(jumpRow, jumpCol)) {
-            return {
-                row: jumpRow,
-                col: jumpCol,
-                type: MoveType.JUMP,
-                captured: {row: targetPiece.row, col: targetPiece.col}
-            };
-        }
-        return null;
-    }
-
-    #anyPlayerJumpsAvailable() {
-        for (let r = 0; r < GAME_CONFIG.BOARD_SIZE; r++) {
-            for (let c = 0; c < GAME_CONFIG.BOARD_SIZE; c++) {
-                const piece = this.#board.getPiece(r, c);
-                if (piece && piece.direction === this.#currentTurnDir) {
-                    if (this.#hasJumpAvailable(r, c)) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
+        return this.#moveEngine.getValidMoves(
+            row, 
+            col, 
+            this.currentPlayer.moveDir, 
+            this.#mustJumpPiece, 
+            this.#hasJumpsAvailable
+        );
     }
 
     executeMove(from, toMove) {
         const piece = this.#board.getPiece(from.row, from.col);
         if (!piece) return false;
 
-        const notation = this.#generateNotation(from, toMove);
-        this.#moveHistory.push({
-            notation,
-            from: {...from},
-            to: {row: toMove.row, col: toMove.col}
-        });
+        this.#history.addMove(from, toMove);
 
         this.#board.movePiece(piece, from, toMove);
         if (toMove.type === MoveType.JUMP) {
@@ -164,22 +88,13 @@ export class GameModel {
         return true;
     }
 
-    #generateNotation(from, to) {
-        const turnNumber = Math.floor(this.#moveHistory.length / 2) + 1;
-        const prefix = this.#currentTurnDir === GAME_RULES.MOVE_DIR_UP ? `${turnNumber}. ` : '';
-        const fromAlg = GameModel.toAlgebraic(from.row, from.col);
-        const toAlg = GameModel.toAlgebraic(to.row, to.col);
-        const separator = to.type === MoveType.JUMP ? 'x' : '-';
-        return `${prefix}${fromAlg}${separator}${toAlg}`;
-    }
-
     #checkPromotion(piece, row) {
         return this.#board.checkPromotion(piece, row);
     }
 
     #handlePostMove(piece, toMove, promoted) {
         if (toMove.type === MoveType.JUMP && !promoted) {
-            if (this.#hasJumpAvailable(toMove.row, toMove.col)) {
+            if (this.#moveEngine.hasJumpAvailable(toMove.row, toMove.col)) {
                 this.#mustJumpPiece = {row: toMove.row, col: toMove.col};
                 this.#hasJumpsAvailable = true;
                 return;
@@ -191,10 +106,10 @@ export class GameModel {
     }
 
     #switchTurn() {
-        this.#currentTurnDir = this.#currentTurnDir === GAME_RULES.MOVE_DIR_UP 
-            ? GAME_RULES.MOVE_DIR_DOWN 
-            : GAME_RULES.MOVE_DIR_UP;
-        this.#hasJumpsAvailable = this.#anyPlayerJumpsAvailable();
+        this.#currentPlayer = this.#currentPlayer.id === this.#players[0].id 
+            ? this.#players[1] 
+            : this.#players[0];
+        this.#hasJumpsAvailable = this.#moveEngine.anyPlayerJumpsAvailable(this.currentPlayer.moveDir);
     }
 
     hasAnyValidMoves(direction) {
@@ -214,37 +129,39 @@ export class GameModel {
     getClonedState() {
         return {
             board: this.#board.getBoardClone(),
-            currentTurnDir: this.#currentTurnDir,
+            currentPlayer: this.#currentPlayer.toJSON(),
             mustJumpPiece: this.#mustJumpPiece ? {...this.#mustJumpPiece} : null,
             hasJumpsAvailable: this.#hasJumpsAvailable,
-            moveHistory: [...this.#moveHistory],
+            moveHistory: this.#history.toJSON(),
         };
     }
 
     getLiveState() {
         return {
             board: this.#board.getOriginalBoard(),
-            currentTurnDir: this.#currentTurnDir,
+            currentPlayer: this.#currentPlayer.toJSON(),
             mustJumpPiece: this.#mustJumpPiece,
             hasJumpsAvailable: this.#hasJumpsAvailable,
-            moveHistory: this.#moveHistory,
+            moveHistory: this.#history.toJSON(),
         };
     }
 
     restoreState(state) {
         if (!state || !state.board) return;
         this.#board.restoreBoard(state.board);
-        this.#currentTurnDir = state.currentTurnDir;
+        if (state.currentPlayer) {
+            this.#currentPlayer = Player.fromJSON(state.currentPlayer);
+        }
         this.#mustJumpPiece = state.mustJumpPiece;
         this.#hasJumpsAvailable = state.hasJumpsAvailable;
-        this.#moveHistory = state.moveHistory || [];
+        this.#history.restore(state.moveHistory);
     }
 
     reset() {
         this.#board = new Board();
-        this.#currentTurnDir = GAME_RULES.MOVE_DIR_UP;
+        this.#currentPlayer = this.#decideFirstPlayer();
         this.#mustJumpPiece = null;
         this.#hasJumpsAvailable = false;
-        this.#moveHistory = [];
+        this.#history.reset();
     }
 }

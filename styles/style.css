@@ -6,10 +6,10 @@
     --cell-color-1-bg: #e8d4b8;
     --cell-color-2-bg: #8b5a2b;
     --checker-size: clamp(30px, 6vw, 60px);
-    --checker-player-1-bg: linear-gradient(145deg, #ffffff 0%, #e0e0e0 50%, #c0c0c0 100%);
-    --checker-player-1-border: #b0b0b0;
-    --checker-player-2-bg: linear-gradient(145deg, #4a4a4a 0%, #2a2a2a 50%, #1a1a1a 100%);
-    --checker-player-2-border: #000;
+    --checker-white-bg: linear-gradient(145deg, #ffffff 0%, #e0e0e0 50%, #c0c0c0 100%);
+    --checker-white-border: #b0b0b0;
+    --checker-black-bg: linear-gradient(145deg, #4a4a4a 0%, #2a2a2a 50%, #1a1a1a 100%);
+    --checker-black-border: #000;
     --highlight-color: #ffcc00;
     --valid-move-color: rgba(100, 200, 100, 0.6);
     --primary-color: #4a7c59;
@@ -129,13 +129,13 @@ body {
     box-shadow: 0 0 10px currentColor;
 }
 
-.turn-dot.player-1 {
+.turn-dot.white {
     background: var(--white);
     border: 2px solid var(--light-border);
     box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
 }
 
-.turn-dot.player-2 {
+.turn-dot.black {
     background: var(--dark-bg);
     border: 2px solid var(--black);
     box-shadow: 0 0 8px rgba(50, 50, 50, 0.8);
@@ -296,14 +296,14 @@ body {
     pointer-events: none;
 }
 
-.checker.player-1-piece {
-    background: var(--checker-player-1-bg);
-    border: 3px solid var(--checker-player-1-border);
+.checker.white-piece {
+    background: var(--checker-white-bg);
+    border: 3px solid var(--checker-white-border);
 }
 
-.checker.player-2-piece {
-    background: var(--checker-player-2-bg);
-    border: 3px solid var(--checker-player-2-border);
+.checker.black-piece {
+    background: var(--checker-black-bg);
+    border: 3px solid var(--checker-black-border);
 }
 
 .checker:hover {

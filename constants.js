@@ -2,12 +2,15 @@ export const GAME_CONFIG = {
     BOARD_SIZE: 8,
     LOCAL_STORAGE_STATE_KEY: 'checkers_state',
     DEFAULT_GAME_TIME: 60,
+    ANIMATION_DURATION: 400,
 };
 
 export const GAME_RULES = {
     PIECE_ROWS_COUNT: 3,
     MOVE_DIR_UP: 1,
     MOVE_DIR_DOWN: -1,
+    PLAYER_1_ID: 1,
+    PLAYER_2_ID: 2,
 };
 
 export const CSS_BOARD = {
@@ -17,8 +20,8 @@ export const CSS_BOARD = {
     BLACK_CELL_CLASS: 'color-2-cell',
     WHITE_CELL_CLASS: 'color-1-cell',
     CHECKER_CLASS: 'checker',
-    PLAYER_1_CHECKER_CLASS: 'player-1-piece',
-    PLAYER_2_CHECKER_CLASS: 'player-2-piece',
+    PLAYER_1_CHECKER_CLASS: 'white-piece',
+    PLAYER_2_CHECKER_CLASS: 'black-piece',
     KING_CLASS: 'king',
     HIGHLIGHT_CLASS: 'highlight',
     VALID_MOVE_CLASS: 'valid-move',
