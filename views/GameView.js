@@ -108,10 +108,6 @@ export class GameView {
         this.#uiHelper.setCursor(row, col);
     }
 
-    clearCursor() {
-        this.#uiHelper.clearCursor();
-    }
-
     clearHistoryHighlights() {
         this.#uiHelper.clearHistoryHighlights();
     }

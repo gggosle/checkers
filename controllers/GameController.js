@@ -37,7 +37,7 @@ export class GameController {
 
     setOnMoveExecuted(callback) { this.#onMoveExecuted = callback; }
     setOnTurnChange(callback) { this.#onTurnChange = callback; }
-    setOnWin(callback) { this.#stateManager.onWin = callback; } // Assuming we update GameStateManager to allow late setting or just use the constructor one
+    setOnWin(callback) { this.#stateManager.onWin = callback; } 
 
     getSelectedChecker() { return this.#selectedChecker; }
 
