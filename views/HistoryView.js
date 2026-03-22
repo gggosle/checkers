@@ -49,14 +49,4 @@ export class HistoryView {
             this.#onMoveClick(move);
         }
     }
-
-    clearSelection() {
-        if (this.#selectedIndex !== -1) {
-            const items = this.#listElement.querySelectorAll(`.${CSS_HISTORY.ITEM_CLASS}`);
-            if (items[this.#selectedIndex]) {
-                items[this.#selectedIndex].classList.remove(CSS_HISTORY.SELECTED_CLASS);
-            }
-            this.#selectedIndex = -1;
-        }
-    }
 }
