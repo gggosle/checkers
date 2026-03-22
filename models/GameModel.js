@@ -4,6 +4,7 @@ import {GAME_CONFIG} from "../constants.js";
 import {PlayerGenerator} from "../services/PlayerGenerator.js";
 import {Player} from "./Player.js";
 import {HistoryModel} from "./HistoryModel.js";
+import {MoveEngine} from "./MoveEngine.js";
 
 export class GameModel {
     #board;
@@ -12,6 +13,7 @@ export class GameModel {
     #mustJumpPiece;
     #hasJumpsAvailable;
     #history;
+    #moveEngine;
 
     constructor() {
         this.#board = new Board();
@@ -20,6 +22,7 @@ export class GameModel {
         this.#mustJumpPiece = null;
         this.#hasJumpsAvailable = false;
         this.#history = new HistoryModel();
+        this.#moveEngine = new MoveEngine(this.#board);
     }
 
     #decideFirstPlayer() {
@@ -60,98 +63,13 @@ export class GameModel {
     }
 
     getValidMoves(row, col) {
-        const piece = this.#board.getPiece(row, col);
-        if (!piece || piece.direction !== this.currentPlayer.moveDir) return [];
-
-        if (this.#mustJumpPiece && (this.#mustJumpPiece.row !== row || this.#mustJumpPiece.col !== col)) {
-            return [];
-        }
-
-        const moves = this.#calculatePotentialMoves(row, col);
-
-        if (this.#hasJumpsAvailable) {
-            return moves.filter(m => m.type === MoveType.JUMP);
-        }
-
-        return moves;
-    }
-
-    #calculatePotentialMoves(row, col) {
-        const piece = this.#board.getPiece(row, col);
-        if (!piece) return [];
-
-        const moves = [];
-        this.#forEachPossibleDirection(piece, (dr, dc) => {
-            const move = this.#calculateTargetMove(piece, row, col, dr, dc);
-            if (move) moves.push(move);
-        });
-
-        return moves;
-    }
-
-    #hasJumpAvailable(row, col) {
-        const piece = this.#board.getPiece(row, col);
-        if (!piece) return false;
-
-        let hasJump = false;
-        this.#forEachPossibleDirection(piece, (dr, dc) => {
-            if (hasJump) return;
-            const move = this.#calculateTargetMove(piece, row, col, dr, dc);
-            if (move?.type === MoveType.JUMP) hasJump = true;
-        });
-
-        return hasJump;
-    }
-
-    #forEachPossibleDirection(piece, callback) {
-        const directions = piece.isKing ? [1, -1] : [piece.direction];
-        for (const dr of directions) {
-            for (const dc of [1, -1]) {
-                callback(dr, dc);
-            }
-        }
-    }
-
-    #calculateTargetMove(piece, row, col, dr, dc) {
-        const targetRow = row + dr;
-        const targetCol = col + dc;
-        if (!this.#board.isInBounds(targetRow, targetCol)) return null;
-
-        const targetPiece = this.#board.getPiece(targetRow, targetCol);
-        if (!targetPiece) return {row: targetRow, col: targetCol, type: MoveType.MOVE};
-
-        return this.#tryCalculateJump(piece, targetPiece, dr, dc);
-    }
-
-    #tryCalculateJump(piece, targetPiece, dr, dc) {
-        if (targetPiece.direction === piece.direction) return null;
-
-        const jumpRow = targetPiece.row + dr;
-        const jumpCol = targetPiece.col + dc;
-
-        if (this.#board.isInBounds(jumpRow, jumpCol) && !this.#board.getPiece(jumpRow, jumpCol)) {
-            return {
-                row: jumpRow,
-                col: jumpCol,
-                type: MoveType.JUMP,
-                captured: {row: targetPiece.row, col: targetPiece.col}
-            };
-        }
-        return null;
-    }
-
-    #anyPlayerJumpsAvailable() {
-        for (let r = 0; r < GAME_CONFIG.BOARD_SIZE; r++) {
-            for (let c = 0; c < GAME_CONFIG.BOARD_SIZE; c++) {
-                const piece = this.#board.getPiece(r, c);
-                if (piece && piece.direction === this.currentPlayer.moveDir) {
-                    if (this.#hasJumpAvailable(r, c)) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
+        return this.#moveEngine.getValidMoves(
+            row, 
+            col, 
+            this.currentPlayer.moveDir, 
+            this.#mustJumpPiece, 
+            this.#hasJumpsAvailable
+        );
     }
 
     executeMove(from, toMove) {
@@ -176,7 +94,7 @@ export class GameModel {
 
     #handlePostMove(piece, toMove, promoted) {
         if (toMove.type === MoveType.JUMP && !promoted) {
-            if (this.#hasJumpAvailable(toMove.row, toMove.col)) {
+            if (this.#moveEngine.hasJumpAvailable(toMove.row, toMove.col)) {
                 this.#mustJumpPiece = {row: toMove.row, col: toMove.col};
                 this.#hasJumpsAvailable = true;
                 return;
@@ -191,7 +109,7 @@ export class GameModel {
         this.#currentPlayer = this.#currentPlayer.id === this.#players[0].id 
             ? this.#players[1] 
             : this.#players[0];
-        this.#hasJumpsAvailable = this.#anyPlayerJumpsAvailable();
+        this.#hasJumpsAvailable = this.#moveEngine.anyPlayerJumpsAvailable(this.currentPlayer.moveDir);
     }
 
     hasAnyValidMoves(direction) {

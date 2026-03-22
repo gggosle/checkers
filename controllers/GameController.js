@@ -1,4 +1,6 @@
 import {KeyboardController} from "./KeyboardController.js";
+import {MoveProcessor} from "./MoveProcessor.js";
+import {GameStateManager} from "../services/GameStateManager.js";
 
 export class GameController {
     #model;
@@ -7,6 +9,8 @@ export class GameController {
     #timerController;
     #keyboardController;
     #undoController;
+    #moveProcessor;
+    #stateManager;
     #selectedChecker = null;
     #validMoves = [];
     #prevState = null;
@@ -14,7 +18,6 @@ export class GameController {
     #gameEnded = false;
     #onTurnChange = null;
     #onMoveExecuted = null;
-    #onWin = null;
 
     constructor(model, view, storage, timerController, undoController) {
         this.#model = model;
@@ -24,28 +27,19 @@ export class GameController {
         this.#undoController = undoController;
         
         this.#keyboardController = new KeyboardController(this.#view, () => this.#handleCursorAction());
+        this.#moveProcessor = new MoveProcessor(this.#model, this.#view, this.#keyboardController, () => this.#handleMoveCompleted());
+        this.#stateManager = new GameStateManager(model, storage, timerController, undoController, (winner) => this.#handleWin(winner));
         
         this.#timerController.setOnTimeout((playerNum) => this.#handleTimeOut(playerNum));
-
         this.#init();
         this.#startTimer();
     }
 
-    setOnMoveExecuted(callback) {
-        this.#onMoveExecuted = callback;
-    }
+    setOnMoveExecuted(callback) { this.#onMoveExecuted = callback; }
+    setOnTurnChange(callback) { this.#onTurnChange = callback; }
+    setOnWin(callback) { this.#stateManager.onWin = callback; } // Assuming we update GameStateManager to allow late setting or just use the constructor one
 
-    setOnTurnChange(callback) {
-        this.#onTurnChange = callback;
-    }
-
-    setOnWin(callback) {
-        this.#onWin = callback;
-    }
-
-    getSelectedChecker() {
-        return this.#selectedChecker;
-    }
+    getSelectedChecker() { return this.#selectedChecker; }
 
     #init() {
         this.#view.render(
@@ -57,48 +51,28 @@ export class GameController {
     }
 
     #handleCursorAction() {
-        const row = this.#keyboardController.cursorRow;
-        const col = this.#keyboardController.cursorCol;
-        const piece = this.#model.getPiece(row, col);
-        if (piece && this.#isOwnPiece(piece)) {
-            this.#handleCheckerClick(row, col);
-        } else {
-            this.#handleCellClick(row, col);
-        }
+        const {cursorRow: r, cursorCol: c} = this.#keyboardController;
+        const piece = this.#model.getPiece(r, c);
+        if (piece && piece.direction === this.#model.currentTurnDir) this.#handleCheckerClick(r, c);
+        else this.#handleCellClick(r, c);
     }
 
     #handleCheckerClick(row, col) {
         if (this.#view.isTransitioning) return;
         this.#view.clearHistoryHighlights();
         const piece = this.#model.getPiece(row, col);
-        if (!this.#isOwnPiece(piece)) return;
+        if (!piece || piece.direction !== this.#model.currentTurnDir) return;
 
-        if (this.#isMustJumpPieceViolation(row, col)) return;
+        const mustJump = this.#model.mustJumpPiece;
+        if (mustJump && (mustJump.row !== row || mustJump.col !== col)) return;
 
-        if (this.#isToggleDeselect(row, col)) {
+        if (this.#selectedChecker?.row === row && this.#selectedChecker?.col === col && !mustJump) {
             this.#deselect();
             return;
         }
 
         const validMoves = this.#model.getValidMoves(row, col);
-        if (validMoves.length > 0) {
-            this.#select(row, col, validMoves);
-        }
-    }
-
-    #isOwnPiece(piece) {
-        return piece && piece.direction === this.#model.currentTurnDir;
-    }
-
-    #isMustJumpPieceViolation(row, col) {
-        const mustJumpPiece = this.#model.mustJumpPiece;
-        return mustJumpPiece && (mustJumpPiece.row !== row || mustJumpPiece.col !== col);
-    }
-
-    #isToggleDeselect(row, col) {
-        return this.#selectedChecker?.row === row &&
-            this.#selectedChecker?.col === col &&
-            !this.#model.mustJumpPiece;
+        if (validMoves.length > 0) this.#select(row, col, validMoves);
     }
 
     #deselect() {
@@ -122,22 +96,36 @@ export class GameController {
         if (!move) return;
 
         this.#stopTimer();
-        this.#view.animateMove(
-            this.#selectedChecker,
-            {row, col},
-            () => {
-                this.#recordMoveState(move);
-                this.#model.executeMove(this.#selectedChecker, move);
-                this.#keyboardController.setCursor(row, col);
-                this.#processMoveResult();
-                this.#checkWinCondition();
-            }
+        this.#moveProcessor.executeMove(
+            this.#selectedChecker, 
+            move, 
+            (m) => this.#recordMoveState(m)
         );
+    }
+
+    #handleMoveCompleted() {
+        this.#selectedChecker = this.#moveProcessor.selectedCheckerAfterMove;
+        this.#validMoves = this.#moveProcessor.validMovesAfterMove;
+        this.#init();
+
+        if (!this.#selectedChecker) this.#startTimer();
+
+        if (this.#onMoveExecuted) this.#onMoveExecuted(this.#model.moveHistory);
+        if (this.#onTurnChange) this.#onTurnChange(this.#model.currentPlayer);
+        
+        const winner = this.#stateManager.checkWinCondition();
+        if (winner) this.#handleWin(winner);
+        this.#stateManager.saveState();
+    }
+
+    #handleWin(winner) {
+        this.#gameEnded = true;
+        this.#stateManager.handleWin(winner, this.#keyboardController);
+        this.#notifyUndoStateChange();
     }
 
     #recordMoveState(move) {
         if (this.#gameEnded) return;
-
         this.#prevState = this.#model.getClonedState();
         this.#lastMove = {
             from: {row: this.#selectedChecker.row, col: this.#selectedChecker.col},
@@ -145,53 +133,6 @@ export class GameController {
             captured: move.captured ? {...move.captured} : null
         };
         this.#notifyUndoStateChange();
-    }
-
-    #processMoveResult() {
-        const mustJumpPiece = this.#model.mustJumpPiece;
-        this.#init();
-
-        if (mustJumpPiece) {
-            this.#handleMultiJump(mustJumpPiece);
-            this.#keyboardController.setCursor(mustJumpPiece.row, mustJumpPiece.col);
-        } else {
-            this.#deselect();
-            this.#startTimer();
-        }
-
-        if (this.#onMoveExecuted) {
-            this.#onMoveExecuted(this.#model.moveHistory);
-        }
-
-        if (this.#onTurnChange) {
-            this.#onTurnChange(this.#model.currentPlayer);
-        }
-        this.#saveStateToLocalStorage();
-    }
-
-    #saveStateToLocalStorage() {
-        const liveState = this.#model.getLiveState();
-        liveState.playerTimes = this.#timerController.playerTimes;
-        this.#storage.saveToLocalStorage(liveState);
-    }
-
-    #checkWinCondition() {
-        const activeDir = this.#model.currentTurnDir;
-        if (!this.#model.hasAnyValidMoves(activeDir)) {
-            const winner = this.#model.players.find(p => p.moveDir !== activeDir);
-            this.#handleWin(winner);
-        }
-    }
-
-    #handleWin(winner) {
-        this.#gameEnded = true;
-        this.#keyboardController.setGameEnded(true);
-        this.#stopTimer();
-        this.#notifyUndoStateChange();
-        this.#storage.clearSavedState();
-        if (this.#onWin) {
-            this.#onWin(winner);
-        }
     }
 
     #notifyUndoStateChange() {
@@ -203,40 +144,25 @@ export class GameController {
 
         this.#stopTimer();
         const originalLastMove = this.#lastMove;
-        this.#view.animateUndoMove(
-            originalLastMove.from,
-            originalLastMove.to,
-            () => {
-                this.#model.restoreState(this.#prevState);
-                this.#prevState = null;
-                this.#lastMove = null;
-                this.#gameEnded = false;
-                this.#keyboardController.setCursor(originalLastMove.from.row, originalLastMove.from.col);
-                
-                this.#notifyUndoStateChange();
-                this.#deselect();
-                this.#init();
-                this.#startTimer();
-                if (this.#onMoveExecuted) {
-                    this.#onMoveExecuted(this.#model.moveHistory);
-                }
-                if (this.#onTurnChange) {
-                    this.#onTurnChange(this.#model.currentPlayer);
-                }
-                this.#saveStateToLocalStorage();
-            }
-        );
-    }
-
-    #handleMultiJump(mustJumpPiece) {
-        this.#selectedChecker = {row: mustJumpPiece.row, col: mustJumpPiece.col};
-        this.#validMoves = this.#model.getValidMoves(mustJumpPiece.row, mustJumpPiece.col);
-        this.#view.highlightMoves(this.#selectedChecker, this.#validMoves);
+        this.#view.animateUndoMove(originalLastMove.from, originalLastMove.to, () => {
+            this.#model.restoreState(this.#prevState);
+            this.#prevState = null;
+            this.#lastMove = null;
+            this.#gameEnded = false;
+            this.#keyboardController.setCursor(originalLastMove.from.row, originalLastMove.from.col);
+            this.#notifyUndoStateChange();
+            this.#deselect();
+            this.#init();
+            this.#startTimer();
+            if (this.#onMoveExecuted) this.#onMoveExecuted(this.#model.moveHistory);
+            if (this.#onTurnChange) this.#onTurnChange(this.#model.currentPlayer);
+            this.#stateManager.saveState();
+        });
     }
 
     reset() {
         this.#model.reset();
-        this.#storage.clearSavedState();
+        this.#stateManager.saveState();
         this.#selectedChecker = null;
         this.#validMoves = [];
         this.#prevState = null;
@@ -248,12 +174,8 @@ export class GameController {
         this.#notifyUndoStateChange();
         this.#init();
         this.#startTimer();
-        if (this.#onMoveExecuted) {
-            this.#onMoveExecuted(this.#model.moveHistory);
-        }
-        if (this.#onTurnChange) {
-            this.#onTurnChange(this.#model.currentPlayer);
-        }
+        if (this.#onMoveExecuted) this.#onMoveExecuted(this.#model.moveHistory);
+        if (this.#onTurnChange) this.#onTurnChange(this.#model.currentPlayer);
     }
 
     #startTimer() {
