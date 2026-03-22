@@ -4,6 +4,7 @@ export class GameController {
     #model;
     #view;
     #storage;
+    #timerController;
     #selectedChecker = null;
     #validMoves = [];
     #prevState = null;
@@ -11,31 +12,22 @@ export class GameController {
     #gameEnded = false;
     #cursorRow = 0;
     #cursorCol = 0;
-    #playerTimes = { 1: GAME_CONFIG.DEFAULT_GAME_TIME, 2: GAME_CONFIG.DEFAULT_GAME_TIME };
-    #timerInterval = null;
     #onUndoStateChange = null;
     #onTurnChange = null;
     #onMoveExecuted = null;
     #onWin = null;
-    #onTimerUpdate = null;
 
-    constructor(model, view, storage) {
+    constructor(model, view, storage, timerController) {
         this.#model = model;
         this.#view = view;
         this.#storage = storage;
+        this.#timerController = timerController;
         
-        const savedState = this.#storage.getStateFromLocalStorage();
-        if (savedState && savedState.playerTimes) {
-            this.#playerTimes = savedState.playerTimes;
-        }
+        this.#timerController.setOnTimeout((playerNum) => this.#handleTimeOut(playerNum));
 
         this.#init();
         this.#initKeyboardEvents();
         this.#startTimer();
-    }
-
-    setOnTimerUpdate(callback) {
-        this.#onTimerUpdate = callback;
     }
 
     setOnMoveExecuted(callback) {
@@ -225,7 +217,7 @@ export class GameController {
 
     #saveStateToLocalStorage() {
         const liveState = this.#model.getLiveState();
-        liveState.playerTimes = this.#playerTimes;
+        liveState.playerTimes = this.#timerController.playerTimes;
         this.#storage.saveToLocalStorage(liveState);
     }
 
@@ -299,8 +291,7 @@ export class GameController {
         this.#gameEnded = false;
         this.#cursorRow = 0;
         this.#cursorCol = 0;
-        this.#playerTimes = { 1: GAME_CONFIG.DEFAULT_GAME_TIME, 2: GAME_CONFIG.DEFAULT_GAME_TIME };
-        this.#stopTimer();
+        this.#timerController.reset();
         this.#notifyUndoStateChange();
         this.#init();
         this.#startTimer();
@@ -313,28 +304,13 @@ export class GameController {
     }
 
     #startTimer() {
-        this.#stopTimer();
         if (this.#gameEnded) return;
-
-        this.#timerInterval = setInterval(() => {
-            const activePlayer = this.#model.currentTurnDir === GAME_RULES.MOVE_DIR_UP ? 1 : 2;
-            this.#playerTimes[activePlayer]--;
-
-            if (this.#onTimerUpdate) {
-                this.#onTimerUpdate(activePlayer, this.#playerTimes[activePlayer]);
-            }
-
-            if (this.#playerTimes[activePlayer] <= 0) {
-                this.#handleTimeOut(activePlayer);
-            }
-        }, 1000);
+        const activePlayerNum = this.#model.currentTurnDir === GAME_RULES.MOVE_DIR_UP ? 1 : 2;
+        this.#timerController.start(activePlayerNum);
     }
 
     #stopTimer() {
-        if (this.#timerInterval) {
-            clearInterval(this.#timerInterval);
-            this.#timerInterval = null;
-        }
+        this.#timerController.stop();
     }
 
     #handleTimeOut(timedOutPlayer) {

@@ -8,8 +8,6 @@ export class InfoController {
         this.#model = model;
         this.#view = view;
         this.updateTurnDisplay();
-        this.updateTimerDisplay(1);
-        this.updateTimerDisplay(2);
     }
 
     updateTurn(newDir) {
@@ -22,20 +20,6 @@ export class InfoController {
         this.#view.updateTurnDisplay(playerNum);
     }
 
-    updateTimer(playerNum, seconds) {
-        if (playerNum === 1) {
-            this.#model.setTimePlayer1(seconds);
-        } else {
-            this.#model.setTimePlayer2(seconds);
-        }
-        this.updateTimerDisplay(playerNum);
-    }
-
-    updateTimerDisplay(playerNum) {
-        const seconds = playerNum === 1 ? this.#model.timePlayer1 : this.#model.timePlayer2;
-        this.#view.updateTimerDisplay(playerNum, seconds);
-    }
-
     notifyWin(winner) {
         this.#view.showWinModal(winner);
     }
@@ -44,13 +28,9 @@ export class InfoController {
         this.#view.setOnPlayAgain(callback);
     }
 
-    reset(initialTurnDir, defaultTime) {
+    reset(initialTurnDir) {
         this.#model.setCurrentTurnDir(initialTurnDir);
-        this.#model.setTimePlayer1(defaultTime);
-        this.#model.setTimePlayer2(defaultTime);
         this.updateTurnDisplay();
-        this.updateTimerDisplay(1);
-        this.updateTimerDisplay(2);
         this.#view.hideWinModal();
     }
 }
