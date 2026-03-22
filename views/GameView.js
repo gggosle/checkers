@@ -1,5 +1,5 @@
 import { Color } from '../models/Color.js';
-import {CSS_BOARD, CSS_HISTORY} from "../constants.js";
+import {GAME_CONFIG, CSS_BOARD, CSS_HISTORY} from "../constants.js";
 
 export class GameView {
     #boardElement;
@@ -147,7 +147,7 @@ export class GameView {
         this.#isTransitioning = true;
         const delta = this.#calculateDelta(checkerElement, targetCell);
         
-        checkerElement.style.transition = 'transform 0.4s ease-in-out';
+        checkerElement.style.transition = `transform ${GAME_CONFIG.ANIMATION_DURATION}ms ease-in-out`;
         checkerElement.style.transform = `translate(${delta.x}px, ${delta.y}px)`;
         checkerElement.style.zIndex = '100';
         

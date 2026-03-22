@@ -1,41 +1,39 @@
-import {GAME_CONFIG, GAME_RULES} from "../constants.js";
+import {GAME_RULES} from "../constants.js";
+import {KeyboardController} from "./KeyboardController.js";
 
 export class GameController {
     #model;
     #view;
     #storage;
     #timerController;
+    #keyboardController;
+    #undoController;
     #selectedChecker = null;
     #validMoves = [];
     #prevState = null;
     #lastMove = null;
     #gameEnded = false;
-    #cursorRow = 0;
-    #cursorCol = 0;
-    #onUndoStateChange = null;
     #onTurnChange = null;
     #onMoveExecuted = null;
     #onWin = null;
 
-    constructor(model, view, storage, timerController) {
+    constructor(model, view, storage, timerController, undoController) {
         this.#model = model;
         this.#view = view;
         this.#storage = storage;
         this.#timerController = timerController;
+        this.#undoController = undoController;
+        
+        this.#keyboardController = new KeyboardController(this.#view, () => this.#handleCursorAction());
         
         this.#timerController.setOnTimeout((playerNum) => this.#handleTimeOut(playerNum));
 
         this.#init();
-        this.#initKeyboardEvents();
         this.#startTimer();
     }
 
     setOnMoveExecuted(callback) {
         this.#onMoveExecuted = callback;
-    }
-
-    setOnUndoStateChange(callback) {
-        this.#onUndoStateChange = callback;
     }
 
     setOnTurnChange(callback) {
@@ -57,56 +55,16 @@ export class GameController {
             (row, col) => this.#handleCheckerClick(row, col),
             (row, col) => this.#handleCellClick(row, col)
         );
-        this.#view.setCursor(this.#cursorRow, this.#cursorCol);
-    }
-
-    #initKeyboardEvents() {
-        document.addEventListener('keydown', (e) => {
-            if (this.#gameEnded) return;
-
-            switch (e.key) {
-                case 'ArrowUp':
-                    e.preventDefault();
-                    this.#moveCursor(-1, 0);
-                    break;
-                case 'ArrowDown':
-                    e.preventDefault();
-                    this.#moveCursor(1, 0);
-                    break;
-                case 'ArrowLeft':
-                    e.preventDefault();
-                    this.#moveCursor(0, -1);
-                    break;
-                case 'ArrowRight':
-                    e.preventDefault();
-                    this.#moveCursor(0, 1);
-                    break;
-                case 'Enter':
-                case ' ':
-                    e.preventDefault();
-                    this.#handleCursorAction();
-                    break;
-            }
-        });
-    }
-
-    #moveCursor(dr, dc) {
-        const newRow = Math.max(0, Math.min(GAME_CONFIG.BOARD_SIZE - 1, this.#cursorRow + dr));
-        const newCol = Math.max(0, Math.min(GAME_CONFIG.BOARD_SIZE - 1, this.#cursorCol + dc));
-
-        if (newRow !== this.#cursorRow || newCol !== this.#cursorCol) {
-            this.#cursorRow = newRow;
-            this.#cursorCol = newCol;
-            this.#view.setCursor(this.#cursorRow, this.#cursorCol);
-        }
     }
 
     #handleCursorAction() {
-        const piece = this.#model.getPiece(this.#cursorRow, this.#cursorCol);
+        const row = this.#keyboardController.cursorRow;
+        const col = this.#keyboardController.cursorCol;
+        const piece = this.#model.getPiece(row, col);
         if (piece && this.#isOwnPiece(piece)) {
-            this.#handleCheckerClick(this.#cursorRow, this.#cursorCol);
+            this.#handleCheckerClick(row, col);
         } else {
-            this.#handleCellClick(this.#cursorRow, this.#cursorCol);
+            this.#handleCellClick(row, col);
         }
     }
 
@@ -171,8 +129,7 @@ export class GameController {
             () => {
                 this.#recordMoveState(move);
                 this.#model.executeMove(this.#selectedChecker, move);
-                this.#cursorRow = row;
-                this.#cursorCol = col;
+                this.#keyboardController.setCursor(row, col);
                 this.#processMoveResult();
                 this.#checkWinCondition();
             }
@@ -197,9 +154,7 @@ export class GameController {
 
         if (mustJumpPiece) {
             this.#handleMultiJump(mustJumpPiece);
-            this.#cursorRow = mustJumpPiece.row;
-            this.#cursorCol = mustJumpPiece.col;
-            this.#view.setCursor(this.#cursorRow, this.#cursorCol);
+            this.#keyboardController.setCursor(mustJumpPiece.row, mustJumpPiece.col);
         } else {
             this.#deselect();
             this.#startTimer();
@@ -230,6 +185,7 @@ export class GameController {
 
     #handleWin(winner) {
         this.#gameEnded = true;
+        this.#keyboardController.setGameEnded(true);
         this.#stopTimer();
         this.#notifyUndoStateChange();
         this.#storage.clearSavedState();
@@ -239,9 +195,7 @@ export class GameController {
     }
 
     #notifyUndoStateChange() {
-        if (this.#onUndoStateChange) {
-            this.#onUndoStateChange(this.#prevState !== null && !this.#gameEnded);
-        }
+        this.#undoController.setEnabled(this.#prevState !== null && !this.#gameEnded);
     }
 
     undo() {
@@ -257,8 +211,7 @@ export class GameController {
                 this.#prevState = null;
                 this.#lastMove = null;
                 this.#gameEnded = false;
-                this.#cursorRow = originalLastMove.from.row;
-                this.#cursorCol = originalLastMove.from.col;
+                this.#keyboardController.setCursor(originalLastMove.from.row, originalLastMove.from.col);
                 
                 this.#notifyUndoStateChange();
                 this.#deselect();
@@ -289,8 +242,8 @@ export class GameController {
         this.#prevState = null;
         this.#lastMove = null;
         this.#gameEnded = false;
-        this.#cursorRow = 0;
-        this.#cursorCol = 0;
+        this.#keyboardController.setGameEnded(false);
+        this.#keyboardController.setCursor(0, 0);
         this.#timerController.reset();
         this.#notifyUndoStateChange();
         this.#init();
@@ -305,7 +258,7 @@ export class GameController {
 
     #startTimer() {
         if (this.#gameEnded) return;
-        const activePlayerNum = this.#model.currentTurnDir === GAME_RULES.MOVE_DIR_UP ? 1 : 2;
+        const activePlayerNum = this.#model.currentTurnDir === GAME_RULES.MOVE_DIR_UP ? GAME_RULES.PLAYER_1_ID : GAME_RULES.PLAYER_2_ID;
         this.#timerController.start(activePlayerNum);
     }
 
@@ -314,7 +267,7 @@ export class GameController {
     }
 
     #handleTimeOut(timedOutPlayer) {
-        const winner = timedOutPlayer === 1 ? 'PLAYER_2' : 'PLAYER_1';
+        const winner = timedOutPlayer === GAME_RULES.PLAYER_1_ID ? 'PLAYER_2' : 'PLAYER_1';
         this.#handleWin(winner);
     }
 }
