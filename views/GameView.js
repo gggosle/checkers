@@ -209,7 +209,7 @@ export class GameView {
     #createCheckerElement(checkerData) {
         const checker = document.createElement('div');
         checker.classList.add(CSS_BOARD.CHECKER_CLASS);
-        checker.classList.add(checkerData.color === Color.PLAYER_1 ? CSS_BOARD.PLAYER_1_CHECKER_CLASS : CSS_BOARD.PLAYER_2_CHECKER_CLASS);
+        checker.classList.add(checkerData.color === Color.WHITE ? CSS_BOARD.PLAYER_1_CHECKER_CLASS : CSS_BOARD.PLAYER_2_CHECKER_CLASS);
         if (checkerData.isKing) {
             checker.classList.add(CSS_BOARD.KING_CLASS);
         }

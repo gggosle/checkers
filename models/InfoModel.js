@@ -1,15 +1,15 @@
 export class InfoModel {
-    #currentTurnDir;
+    #currentPlayer;
 
-    constructor(initialTurnDir) {
-        this.#currentTurnDir = initialTurnDir;
+    constructor(initialPlayer) {
+        this.#currentPlayer = initialPlayer;
     }
 
-    get currentTurnDir() {
-        return this.#currentTurnDir;
+    get currentPlayer() {
+        return this.#currentPlayer;
     }
 
-    setCurrentTurnDir(dir) {
-        this.#currentTurnDir = dir;
+    setCurrentPlayer(player) {
+        this.#currentPlayer = player;
     }
 }

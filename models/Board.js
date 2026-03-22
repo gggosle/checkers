@@ -80,9 +80,9 @@ export class Board {
         if (!Board.isBlackSquare(row, col)) return null;
 
         if (row < GAME_RULES.PIECE_ROWS_COUNT) {
-            return new Checker(Color.PLAYER_1, row, col, GAME_RULES.MOVE_DIR_UP);
+            return new Checker(Color.WHITE, row, col, GAME_RULES.MOVE_DIR_UP);
         } else if (row >= GAME_CONFIG.BOARD_SIZE - GAME_RULES.PIECE_ROWS_COUNT) {
-            return new Checker(Color.PLAYER_2, row, col, GAME_RULES.MOVE_DIR_DOWN);
+            return new Checker(Color.BLACK, row, col, GAME_RULES.MOVE_DIR_DOWN);
         }
         return null;
     }

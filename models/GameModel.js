@@ -1,20 +1,29 @@
 import {MoveType} from './MoveType.js';
 import {Board} from './Board.js';
 import {GAME_CONFIG, GAME_RULES} from "../constants.js";
+import {PlayerGenerator} from "./PlayerGenerator.js";
+import {Player} from "./Player.js";
 
 export class GameModel {
     #board;
-    #currentTurnDir;
+    #players;
+    #currentPlayer;
     #mustJumpPiece;
     #hasJumpsAvailable;
     #moveHistory;
 
     constructor() {
         this.#board = new Board();
-        this.#currentTurnDir = GAME_RULES.MOVE_DIR_UP;
+        this.#players = PlayerGenerator.generatePlayers();
+        this.#currentPlayer = this.#decideFirstPlayer();
         this.#mustJumpPiece = null;
         this.#hasJumpsAvailable = false;
         this.#moveHistory = [];
+    }
+
+    #decideFirstPlayer() {
+        const randomIndex = Math.floor(Math.random() * this.#players.length);
+        return this.#players[randomIndex];
     }
     
     get boardClone() {
@@ -30,7 +39,15 @@ export class GameModel {
     }
 
     get currentTurnDir() {
-        return this.#currentTurnDir;
+        return this.#currentPlayer.moveDir;
+    }
+
+    get currentPlayer() {
+        return this.#currentPlayer;
+    }
+
+    get players() {
+        return this.#players;
     }
 
     get mustJumpPiece() {
@@ -50,7 +67,7 @@ export class GameModel {
 
     getValidMoves(row, col) {
         const piece = this.#board.getPiece(row, col);
-        if (!piece || piece.direction !== this.#currentTurnDir) return [];
+        if (!piece || piece.direction !== this.currentPlayer.moveDir) return [];
 
         if (this.#mustJumpPiece && (this.#mustJumpPiece.row !== row || this.#mustJumpPiece.col !== col)) {
             return [];
@@ -133,7 +150,7 @@ export class GameModel {
         for (let r = 0; r < GAME_CONFIG.BOARD_SIZE; r++) {
             for (let c = 0; c < GAME_CONFIG.BOARD_SIZE; c++) {
                 const piece = this.#board.getPiece(r, c);
-                if (piece && piece.direction === this.#currentTurnDir) {
+                if (piece && piece.direction === this.currentPlayer.moveDir) {
                     if (this.#hasJumpAvailable(r, c)) {
                         return true;
                     }
@@ -166,7 +183,7 @@ export class GameModel {
 
     #generateNotation(from, to) {
         const turnNumber = Math.floor(this.#moveHistory.length / 2) + 1;
-        const prefix = this.#currentTurnDir === GAME_RULES.MOVE_DIR_UP ? `${turnNumber}. ` : '';
+        const prefix = this.currentPlayer.moveDir === GAME_RULES.MOVE_DIR_UP ? `${turnNumber}. ` : '';
         const fromAlg = GameModel.toAlgebraic(from.row, from.col);
         const toAlg = GameModel.toAlgebraic(to.row, to.col);
         const separator = to.type === MoveType.JUMP ? 'x' : '-';
@@ -191,9 +208,9 @@ export class GameModel {
     }
 
     #switchTurn() {
-        this.#currentTurnDir = this.#currentTurnDir === GAME_RULES.MOVE_DIR_UP 
-            ? GAME_RULES.MOVE_DIR_DOWN 
-            : GAME_RULES.MOVE_DIR_UP;
+        this.#currentPlayer = this.#currentPlayer.id === this.#players[0].id 
+            ? this.#players[1] 
+            : this.#players[0];
         this.#hasJumpsAvailable = this.#anyPlayerJumpsAvailable();
     }
 
@@ -214,7 +231,7 @@ export class GameModel {
     getClonedState() {
         return {
             board: this.#board.getBoardClone(),
-            currentTurnDir: this.#currentTurnDir,
+            currentPlayer: this.#currentPlayer.toJSON(),
             mustJumpPiece: this.#mustJumpPiece ? {...this.#mustJumpPiece} : null,
             hasJumpsAvailable: this.#hasJumpsAvailable,
             moveHistory: [...this.#moveHistory],
@@ -224,7 +241,7 @@ export class GameModel {
     getLiveState() {
         return {
             board: this.#board.getOriginalBoard(),
-            currentTurnDir: this.#currentTurnDir,
+            currentPlayer: this.#currentPlayer.toJSON(),
             mustJumpPiece: this.#mustJumpPiece,
             hasJumpsAvailable: this.#hasJumpsAvailable,
             moveHistory: this.#moveHistory,
@@ -234,7 +251,9 @@ export class GameModel {
     restoreState(state) {
         if (!state || !state.board) return;
         this.#board.restoreBoard(state.board);
-        this.#currentTurnDir = state.currentTurnDir;
+        if (state.currentPlayer) {
+            this.#currentPlayer = Player.fromJSON(state.currentPlayer);
+        }
         this.#mustJumpPiece = state.mustJumpPiece;
         this.#hasJumpsAvailable = state.hasJumpsAvailable;
         this.#moveHistory = state.moveHistory || [];
@@ -242,7 +261,7 @@ export class GameModel {
 
     reset() {
         this.#board = new Board();
-        this.#currentTurnDir = GAME_RULES.MOVE_DIR_UP;
+        this.#currentPlayer = this.#decideFirstPlayer();
         this.#mustJumpPiece = null;
         this.#hasJumpsAvailable = false;
         this.#moveHistory = [];

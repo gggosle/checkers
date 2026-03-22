@@ -15,16 +15,16 @@ export class InfoView {
         this.#playAgainBtn = document.getElementById(CSS_INFO.PLAY_AGAIN_BTN_ID);
     }
 
-    updateTurnDisplay(playerNum) {
+    updateTurnDisplay(playerColor, playerName) {
         if (this.#turnDotElement && this.#turnTextElement) {
-            this.#turnDotElement.className = `turn-dot player-${playerNum}`;
-            this.#turnTextElement.textContent = `Player ${playerNum}'s Turn`;
+            this.#turnDotElement.className = `turn-dot ${playerColor}`;
+            this.#turnTextElement.textContent = `${playerName}'s Turn`;
         }
     }
 
-    showWinModal(winner) {
+    showWinModal(playerName) {
         if (this.#winModalElement && this.#winnerTextElement) {
-            this.#winnerTextElement.textContent = `${winner} Wins!`;
+            this.#winnerTextElement.textContent = `${playerName} Wins!`;
             this.#winModalElement.classList.add(CSS_INFO.ACTIVE_CLASS);
         }
     }

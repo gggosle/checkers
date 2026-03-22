@@ -1,4 +1,3 @@
-import {GAME_RULES} from "../constants.js";
 import {KeyboardController} from "./KeyboardController.js";
 
 export class GameController {
@@ -165,7 +164,7 @@ export class GameController {
         }
 
         if (this.#onTurnChange) {
-            this.#onTurnChange(this.#model.currentTurnDir);
+            this.#onTurnChange(this.#model.currentPlayer);
         }
         this.#saveStateToLocalStorage();
     }
@@ -179,7 +178,8 @@ export class GameController {
     #checkWinCondition() {
         const activeDir = this.#model.currentTurnDir;
         if (!this.#model.hasAnyValidMoves(activeDir)) {
-            this.#handleWin(activeDir === GAME_RULES.MOVE_DIR_UP ? 'PLAYER_2' : 'PLAYER_1');
+            const winner = this.#model.players.find(p => p.moveDir !== activeDir);
+            this.#handleWin(winner);
         }
     }
 
@@ -221,7 +221,7 @@ export class GameController {
                     this.#onMoveExecuted(this.#model.moveHistory);
                 }
                 if (this.#onTurnChange) {
-                    this.#onTurnChange(this.#model.currentTurnDir);
+                    this.#onTurnChange(this.#model.currentPlayer);
                 }
                 this.#saveStateToLocalStorage();
             }
@@ -252,22 +252,21 @@ export class GameController {
             this.#onMoveExecuted(this.#model.moveHistory);
         }
         if (this.#onTurnChange) {
-            this.#onTurnChange(this.#model.currentTurnDir);
+            this.#onTurnChange(this.#model.currentPlayer);
         }
     }
 
     #startTimer() {
         if (this.#gameEnded) return;
-        const activePlayerNum = this.#model.currentTurnDir === GAME_RULES.MOVE_DIR_UP ? GAME_RULES.PLAYER_1_ID : GAME_RULES.PLAYER_2_ID;
-        this.#timerController.start(activePlayerNum);
+        this.#timerController.start(this.#model.currentPlayer.id);
     }
 
     #stopTimer() {
         this.#timerController.stop();
     }
 
-    #handleTimeOut(timedOutPlayer) {
-        const winner = timedOutPlayer === GAME_RULES.PLAYER_1_ID ? 'PLAYER_2' : 'PLAYER_1';
+    #handleTimeOut(timedOutPlayerId) {
+        const winner = this.#model.players.find(p => p.id !== timedOutPlayerId);
         this.#handleWin(winner);
     }
 }
