@@ -1,5 +1,5 @@
-import { Player } from './Player.js';
-import { Color } from './Color.js';
+import { Player } from '../models/Player.js';
+import { Color } from '../models/Color.js';
 import { GAME_RULES } from '../constants.js';
 
 export class PlayerGenerator {

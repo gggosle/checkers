@@ -1,7 +1,7 @@
 import {MoveType} from './MoveType.js';
 import {Board} from './Board.js';
 import {GAME_CONFIG} from "../constants.js";
-import {PlayerGenerator} from "./PlayerGenerator.js";
+import {PlayerGenerator} from "../services/PlayerGenerator.js";
 import {Player} from "./Player.js";
 import {HistoryModel} from "./HistoryModel.js";
 
