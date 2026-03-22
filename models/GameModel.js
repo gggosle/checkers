@@ -1,8 +1,9 @@
 import {MoveType} from './MoveType.js';
 import {Board} from './Board.js';
-import {GAME_CONFIG, GAME_RULES} from "../constants.js";
+import {GAME_CONFIG} from "../constants.js";
 import {PlayerGenerator} from "./PlayerGenerator.js";
 import {Player} from "./Player.js";
+import {HistoryModel} from "./HistoryModel.js";
 
 export class GameModel {
     #board;
@@ -10,7 +11,7 @@ export class GameModel {
     #currentPlayer;
     #mustJumpPiece;
     #hasJumpsAvailable;
-    #moveHistory;
+    #history;
 
     constructor() {
         this.#board = new Board();
@@ -18,7 +19,7 @@ export class GameModel {
         this.#currentPlayer = this.#decideFirstPlayer();
         this.#mustJumpPiece = null;
         this.#hasJumpsAvailable = false;
-        this.#moveHistory = [];
+        this.#history = new HistoryModel();
     }
 
     #decideFirstPlayer() {
@@ -55,14 +56,7 @@ export class GameModel {
     }
 
     get moveHistory() {
-        return [...this.#moveHistory];
-    }
-
-    static toAlgebraic(row, col) {
-        const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-        const letter = letters[col];
-        const rank = GAME_CONFIG.BOARD_SIZE - row;
-        return `${letter}${rank}`;
+        return this.#history.moves;
     }
 
     getValidMoves(row, col) {
@@ -164,12 +158,7 @@ export class GameModel {
         const piece = this.#board.getPiece(from.row, from.col);
         if (!piece) return false;
 
-        const notation = this.#generateNotation(from, toMove);
-        this.#moveHistory.push({
-            notation,
-            from: {...from},
-            to: {row: toMove.row, col: toMove.col}
-        });
+        this.#history.addMove(from, toMove);
 
         this.#board.movePiece(piece, from, toMove);
         if (toMove.type === MoveType.JUMP) {
@@ -179,15 +168,6 @@ export class GameModel {
         const promoted = this.#checkPromotion(piece, toMove.row);
         this.#handlePostMove(piece, toMove, promoted);
         return true;
-    }
-
-    #generateNotation(from, to) {
-        const turnNumber = Math.floor(this.#moveHistory.length / 2) + 1;
-        const prefix = this.currentPlayer.moveDir === GAME_RULES.MOVE_DIR_UP ? `${turnNumber}. ` : '';
-        const fromAlg = GameModel.toAlgebraic(from.row, from.col);
-        const toAlg = GameModel.toAlgebraic(to.row, to.col);
-        const separator = to.type === MoveType.JUMP ? 'x' : '-';
-        return `${prefix}${fromAlg}${separator}${toAlg}`;
     }
 
     #checkPromotion(piece, row) {
@@ -234,7 +214,7 @@ export class GameModel {
             currentPlayer: this.#currentPlayer.toJSON(),
             mustJumpPiece: this.#mustJumpPiece ? {...this.#mustJumpPiece} : null,
             hasJumpsAvailable: this.#hasJumpsAvailable,
-            moveHistory: [...this.#moveHistory],
+            moveHistory: this.#history.toJSON(),
         };
     }
 
@@ -244,7 +224,7 @@ export class GameModel {
             currentPlayer: this.#currentPlayer.toJSON(),
             mustJumpPiece: this.#mustJumpPiece,
             hasJumpsAvailable: this.#hasJumpsAvailable,
-            moveHistory: this.#moveHistory,
+            moveHistory: this.#history.toJSON(),
         };
     }
 
@@ -256,7 +236,7 @@ export class GameModel {
         }
         this.#mustJumpPiece = state.mustJumpPiece;
         this.#hasJumpsAvailable = state.hasJumpsAvailable;
-        this.#moveHistory = state.moveHistory || [];
+        this.#history.restore(state.moveHistory);
     }
 
     reset() {
@@ -264,6 +244,6 @@ export class GameModel {
         this.#currentPlayer = this.#decideFirstPlayer();
         this.#mustJumpPiece = null;
         this.#hasJumpsAvailable = false;
-        this.#moveHistory = [];
+        this.#history.reset();
     }
 }
