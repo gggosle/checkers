@@ -1,32 +1,35 @@
-export class InfoController {
-    #model;
-    #view;
+import { Player } from '../models/Player.js';
+import { OnPlayAgainCallback } from '../models/interfaces';
 
-    constructor(model, view) {
+export class InfoController {
+    #model: import('../models/InfoModel.js').InfoModel;
+    #view: import('../views/InfoView.js').InfoView;
+
+    constructor(model: import('../models/InfoModel.js').InfoModel, view: import('../views/InfoView.js').InfoView) {
         this.#model = model;
         this.#view = view;
         this.updateTurnDisplay();
     }
 
-    updateTurn(player) {
+    updateTurn(player: Player): void {
         this.#model.setCurrentPlayer(player);
         this.updateTurnDisplay();
     }
 
-    updateTurnDisplay() {
+    updateTurnDisplay(): void {
         const player = this.#model.currentPlayer;
         this.#view.updateTurnDisplay(player.color, player.name);
     }
 
-    notifyWin(player) {
+    notifyWin(player: Player): void {
         this.#view.showWinModal(player.name);
     }
 
-    setOnPlayAgain(callback) {
+    setOnPlayAgain(callback: OnPlayAgainCallback): void {
         this.#view.setOnPlayAgain(callback);
     }
 
-    reset(initialPlayer) {
+    reset(initialPlayer: Player): void {
         this.#model.setCurrentPlayer(initialPlayer);
         this.updateTurnDisplay();
         this.#view.hideWinModal();

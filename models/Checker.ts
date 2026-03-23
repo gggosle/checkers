@@ -1,11 +1,13 @@
-export class Checker {
-    #color;
-    #row;
-    #col;
-    #direction;
-    #isKing;
+import {CheckerData} from "./interfaces/CheckerData.js";
 
-    constructor(color, row, col, direction, isKing = false) {
+export class Checker {
+    #color: string;
+    #row: number;
+    #col: number;
+    #direction: number;
+    #isKing: boolean;
+
+    constructor(color: string, row: number, col: number, direction: number, isKing: boolean = false) {
         this.#color = color;
         this.#row = row;
         this.#col = col;
@@ -13,40 +15,40 @@ export class Checker {
         this.#isKing = isKing;
     }
 
-    get color() {
+    get color(): string {
         return this.#color;
     }
 
-    get row() {
+    get row(): number {
         return this.#row;
     }
 
-    get col() {
+    get col(): number {
         return this.#col;
     }
 
-    get direction() {
+    get direction(): number {
         return this.#direction;
     }
 
-    get isKing() {
+    get isKing(): boolean {
         return this.#isKing;
     }
 
-    setPosition(row, col) {
+    setPosition(row: number, col: number): void {
         this.#row = row;
         this.#col = col;
     }
 
-    makeKing() {
+    makeKing(): void {
         this.#isKing = true;
     }
 
-    clone() {
+    clone(): Checker {
         return new Checker(this.#color, this.#row, this.#col, this.#direction, this.#isKing);
     }
 
-    toJSON() {
+    toJSON(): CheckerData {
         return {
             color: this.#color,
             row: this.#row,
@@ -56,10 +58,11 @@ export class Checker {
         };
     }
 
-    static fromJSON(json) {
+    static fromJSON(json: Partial<CheckerData> | null | undefined): Checker {
         if (!json?.color || json.row == null || json.col == null || json.direction == null || json.isKing == null) {
             throw new Error("fromJSON: Missing critical Checker data ");
         }
+
         return new Checker(json.color, json.row, json.col, json.direction, json.isKing);
     }
 }

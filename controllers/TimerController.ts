@@ -1,21 +1,29 @@
-export class TimerController {
-    #model;
-    #view;
-    #timerInterval = null;
-    #onTimeout = null;
-    #onTick = null;
+import { TimerModel } from '../models/TimerModel.js';
+import { TimerView } from '../views/TimerView.js';
+import { OnTimeoutCallback, OnTickCallback } from '../models/interfaces';
 
-    constructor(model, view) {
+export class TimerController {
+    #model: TimerModel;
+    #view: TimerView;
+    #timerInterval: ReturnType<typeof setInterval> | null = null;
+    #onTimeout: OnTimeoutCallback | null = null;
+    #onTick: OnTickCallback | null = null;
+
+    constructor(model: TimerModel, view: TimerView) {
         this.#model = model;
         this.#view = view;
         this.#updateDisplays();
     }
 
-    setOnTimeout(callback) {
+    setOnTimeout(callback: OnTimeoutCallback): void {
         this.#onTimeout = callback;
     }
 
-    start(activePlayerNum) {
+    setOnTick(callback: OnTickCallback): void {
+        this.#onTick = callback;
+    }
+
+    start(activePlayerNum: number): void {
         this.stop();
         this.#model.setActivePlayer(activePlayerNum);
         
@@ -38,14 +46,14 @@ export class TimerController {
         }, 1000);
     }
 
-    stop() {
+    stop(): void {
         if (this.#timerInterval) {
             clearInterval(this.#timerInterval);
             this.#timerInterval = null;
         }
     }
 
-    reset(initialTimes = null) {
+    reset(initialTimes?: { 1: number; 2: number }): void {
         this.stop();
         if (initialTimes) {
             this.#model.setTime(1, initialTimes[1]);
@@ -56,12 +64,12 @@ export class TimerController {
         this.#updateDisplays();
     }
 
-    #updateDisplays() {
+    #updateDisplays(): void {
         this.#view.updateTimerDisplay(1, this.#model.getTime(1));
         this.#view.updateTimerDisplay(2, this.#model.getTime(2));
     }
 
-    get playerTimes() {
+    get playerTimes(): { 1: number; 2: number } {
         return this.#model.playerTimes;
     }
 }

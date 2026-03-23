@@ -4,62 +4,62 @@ import {GAME_CONFIG} from "../constants.js";
 import {PlayerGenerator} from "../services/PlayerGenerator.js";
 import {Player} from "./Player.js";
 import {HistoryModel} from "./HistoryModel.js";
+import { Move, Position, MoveEntry, ClonedState, LiveState } from './interfaces';
+import { Checker } from './Checker.js';
 
 export class GameModel {
-    #board;
-    #players;
-    #currentPlayer;
-    #mustJumpPiece;
-    #hasJumpsAvailable;
-    #history;
+    #board: Board;
+    #players: Player[];
+    #currentPlayer: Player;
+    #mustJumpPiece: Position | null = null;
+    #hasJumpsAvailable = false;
+    #history: HistoryModel;
 
     constructor() {
         this.#board = new Board();
         this.#players = PlayerGenerator.generatePlayers();
         this.#currentPlayer = this.#decideFirstPlayer();
-        this.#mustJumpPiece = null;
-        this.#hasJumpsAvailable = false;
         this.#history = new HistoryModel();
     }
 
-    #decideFirstPlayer() {
+    #decideFirstPlayer(): Player {
         const randomIndex = Math.floor(Math.random() * this.#players.length);
         return this.#players[randomIndex];
     }
     
-    get boardClone() {
+    get boardClone(): (Checker | null)[][] {
         return this.#board.getBoardClone();
     }
     
-    getPiece(row, col) {
+    getPiece(row: number, col: number): Checker | null {
         return this.#board.getPiece(row, col);
     }
     
-    isBlackSquare(row, col) {
+    isBlackSquare(row: number, col: number): boolean {
         return Board.isBlackSquare(row, col);
     }
 
-    get currentTurnDir() {
+    get currentTurnDir(): number {
         return this.#currentPlayer.moveDir;
     }
 
-    get currentPlayer() {
+    get currentPlayer(): Player {
         return this.#currentPlayer;
     }
 
-    get players() {
+    get players(): Player[] {
         return this.#players;
     }
 
-    get mustJumpPiece() {
+    get mustJumpPiece(): Position | null {
         return this.#mustJumpPiece;
     }
 
-    get moveHistory() {
+    get moveHistory(): MoveEntry[] {
         return this.#history.moves;
     }
 
-    getValidMoves(row, col) {
+    getValidMoves(row: number, col: number): Move[] {
         const piece = this.#board.getPiece(row, col);
         if (!piece || piece.direction !== this.currentPlayer.moveDir) return [];
 
@@ -76,12 +76,12 @@ export class GameModel {
         return moves;
     }
 
-    #calculatePotentialMoves(row, col) {
+    #calculatePotentialMoves(row: number, col: number): Move[] {
         const piece = this.#board.getPiece(row, col);
         if (!piece) return [];
 
-        const moves = [];
-        this.#forEachPossibleDirection(piece, (dr, dc) => {
+        const moves: Move[] = [];
+        this.#forEachPossibleDirection(piece, (dr: number, dc: number) => {
             const move = this.#calculateTargetMove(piece, row, col, dr, dc);
             if (move) moves.push(move);
         });
@@ -89,12 +89,12 @@ export class GameModel {
         return moves;
     }
 
-    #hasJumpAvailable(row, col) {
+    #hasJumpAvailable(row: number, col: number): boolean {
         const piece = this.#board.getPiece(row, col);
         if (!piece) return false;
 
         let hasJump = false;
-        this.#forEachPossibleDirection(piece, (dr, dc) => {
+        this.#forEachPossibleDirection(piece, (dr: number, dc: number) => {
             if (hasJump) return;
             const move = this.#calculateTargetMove(piece, row, col, dr, dc);
             if (move?.type === MoveType.JUMP) hasJump = true;
@@ -103,7 +103,7 @@ export class GameModel {
         return hasJump;
     }
 
-    #forEachPossibleDirection(piece, callback) {
+    #forEachPossibleDirection(piece: Checker, callback: (dr: number, dc: number) => void): void {
         const directions = piece.isKing ? [1, -1] : [piece.direction];
         for (const dr of directions) {
             for (const dc of [1, -1]) {
@@ -112,18 +112,18 @@ export class GameModel {
         }
     }
 
-    #calculateTargetMove(piece, row, col, dr, dc) {
+    #calculateTargetMove(piece: Checker, row: number, col: number, dr: number, dc: number): Move | null {
         const targetRow = row + dr;
         const targetCol = col + dc;
         if (!this.#board.isInBounds(targetRow, targetCol)) return null;
 
         const targetPiece = this.#board.getPiece(targetRow, targetCol);
-        if (!targetPiece) return {row: targetRow, col: targetCol, type: MoveType.MOVE};
+        if (!targetPiece) return {row: targetRow, col: targetCol, type: MoveType.MOVE, captured: null};
 
         return this.#tryCalculateJump(piece, targetPiece, dr, dc);
     }
 
-    #tryCalculateJump(piece, targetPiece, dr, dc) {
+    #tryCalculateJump(piece: Checker, targetPiece: Checker, dr: number, dc: number): Move | null {
         if (targetPiece.direction === piece.direction) return null;
 
         const jumpRow = targetPiece.row + dr;
@@ -140,7 +140,7 @@ export class GameModel {
         return null;
     }
 
-    #anyPlayerJumpsAvailable() {
+    #anyPlayerJumpsAvailable(): boolean {
         for (let r = 0; r < GAME_CONFIG.BOARD_SIZE; r++) {
             for (let c = 0; c < GAME_CONFIG.BOARD_SIZE; c++) {
                 const piece = this.#board.getPiece(r, c);
@@ -154,27 +154,27 @@ export class GameModel {
         return false;
     }
 
-    executeMove(from, toMove) {
+    executeMove(from: Position, toMove: Move): boolean {
         const piece = this.#board.getPiece(from.row, from.col);
         if (!piece) return false;
 
         this.#history.addMove(from, toMove);
 
         this.#board.movePiece(piece, from, toMove);
-        if (toMove.type === MoveType.JUMP) {
+        if (toMove.type === MoveType.JUMP && toMove.captured) {
             this.#board.removePiece(toMove.captured);
         }
 
         const promoted = this.#checkPromotion(piece, toMove.row);
-        this.#handlePostMove(piece, toMove, promoted);
+        this.#handlePostMove(toMove, promoted);
         return true;
     }
 
-    #checkPromotion(piece, row) {
+    #checkPromotion(piece: Checker, row: number): boolean {
         return this.#board.checkPromotion(piece, row);
     }
 
-    #handlePostMove(piece, toMove, promoted) {
+    #handlePostMove(toMove: Move, promoted: boolean): void {
         if (toMove.type === MoveType.JUMP && !promoted) {
             if (this.#hasJumpAvailable(toMove.row, toMove.col)) {
                 this.#mustJumpPiece = {row: toMove.row, col: toMove.col};
@@ -187,14 +187,14 @@ export class GameModel {
         this.#switchTurn();
     }
 
-    #switchTurn() {
+    #switchTurn(): void {
         this.#currentPlayer = this.#currentPlayer.id === this.#players[0].id 
             ? this.#players[1] 
             : this.#players[0];
         this.#hasJumpsAvailable = this.#anyPlayerJumpsAvailable();
     }
 
-    hasAnyValidMoves(direction) {
+    hasAnyValidMoves(direction: number): boolean {
         for (let r = 0; r < GAME_CONFIG.BOARD_SIZE; r++) {
             for (let c = 0; c < GAME_CONFIG.BOARD_SIZE; c++) {
                 const piece = this.#board.getPiece(r, c);
@@ -208,7 +208,7 @@ export class GameModel {
         return false;
     }
 
-    getClonedState() {
+    getClonedState(): ClonedState {
         return {
             board: this.#board.getBoardClone(),
             currentPlayer: this.#currentPlayer.toJSON(),
@@ -218,7 +218,7 @@ export class GameModel {
         };
     }
 
-    getLiveState() {
+    getLiveState(): LiveState {
         return {
             board: this.#board.getOriginalBoard(),
             currentPlayer: this.#currentPlayer.toJSON(),
@@ -228,18 +228,18 @@ export class GameModel {
         };
     }
 
-    restoreState(state) {
+    restoreState(state: ClonedState | LiveState): void {
         if (!state || !state.board) return;
         this.#board.restoreBoard(state.board);
         if (state.currentPlayer) {
-            this.#currentPlayer = Player.fromJSON(state.currentPlayer);
+            this.#currentPlayer = Player.fromJSON(state.currentPlayer) as Player;
         }
         this.#mustJumpPiece = state.mustJumpPiece;
         this.#hasJumpsAvailable = state.hasJumpsAvailable;
         this.#history.restore(state.moveHistory);
     }
 
-    reset() {
+    reset(): void {
         this.#board = new Board();
         this.#currentPlayer = this.#decideFirstPlayer();
         this.#mustJumpPiece = null;

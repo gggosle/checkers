@@ -1,14 +1,14 @@
 export class UndoController {
-    #onUndo;
-    #button;
+    #onUndo: () => void;
+    #button: HTMLButtonElement | null;
 
-    constructor(buttonId, onUndo) {
-        this.#button = document.getElementById(buttonId);
+    constructor(buttonId: string, onUndo: () => void) {
+        this.#button = document.getElementById(buttonId) as HTMLButtonElement | null;
         this.#onUndo = onUndo;
         this.#initEvents();
     }
 
-    #initEvents() {
+    #initEvents(): void {
         if (this.#button) {
             this.#button.addEventListener('click', () => {
                 this.#onUndo();
@@ -16,7 +16,7 @@ export class UndoController {
         }
     }
 
-    setEnabled(enabled) {
+    setEnabled(enabled: boolean): void {
         if (this.#button) {
             this.#button.disabled = !enabled;
         }

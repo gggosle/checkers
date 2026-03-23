@@ -1,31 +1,33 @@
-import {GAME_CONFIG} from "../constants.js";
+import { GameView } from '../views/GameView.js';
+import { GAME_CONFIG } from '../constants.js';
+import { OnCursorActionCallback } from '../models/interfaces';
 
 export class KeyboardController {
-    #view;
-    #onAction;
+    #view: GameView;
+    #onAction: OnCursorActionCallback;
     #cursorRow = 0;
     #cursorCol = 0;
     #gameEnded = false;
 
-    constructor(view, onAction) {
+    constructor(view: GameView, onAction: OnCursorActionCallback) {
         this.#view = view;
         this.#onAction = onAction;
         this.#initEvents();
         this.#updateCursor();
     }
 
-    setGameEnded(ended) {
+    setGameEnded(ended: boolean): void {
         this.#gameEnded = ended;
     }
 
-    setCursor(row, col) {
+    setCursor(row: number, col: number): void {
         this.#cursorRow = row;
         this.#cursorCol = col;
         this.#updateCursor();
     }
 
-    #initEvents() {
-        document.addEventListener('keydown', (e) => {
+    #initEvents(): void {
+        document.addEventListener('keydown', (e: KeyboardEvent) => {
             if (this.#gameEnded) return;
 
             switch (e.key) {
@@ -48,13 +50,13 @@ export class KeyboardController {
                 case 'Enter':
                 case ' ':
                     e.preventDefault();
-                    this.#onAction(this.#cursorRow, this.#cursorCol);
+                    this.#onAction();
                     break;
             }
         });
     }
 
-    #moveCursor(dr, dc) {
+    #moveCursor(dr: number, dc: number): void {
         const newRow = Math.max(0, Math.min(GAME_CONFIG.BOARD_SIZE - 1, this.#cursorRow + dr));
         const newCol = Math.max(0, Math.min(GAME_CONFIG.BOARD_SIZE - 1, this.#cursorCol + dc));
 
@@ -65,10 +67,10 @@ export class KeyboardController {
         }
     }
 
-    #updateCursor() {
+    #updateCursor(): void {
         this.#view.setCursor(this.#cursorRow, this.#cursorCol);
     }
 
-    get cursorRow() { return this.#cursorRow; }
-    get cursorCol() { return this.#cursorCol; }
+    get cursorRow(): number { return this.#cursorRow; }
+    get cursorCol(): number { return this.#cursorCol; }
 }

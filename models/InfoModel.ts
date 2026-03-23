@@ -1,15 +1,17 @@
-export class InfoModel {
-    #currentPlayer;
+import { Player } from './Player';
 
-    constructor(initialPlayer) {
+export class InfoModel {
+    #currentPlayer: Player;
+
+    constructor(initialPlayer: Player) {
         this.#currentPlayer = initialPlayer;
     }
 
-    get currentPlayer() {
+    get currentPlayer(): Player {
         return this.#currentPlayer;
     }
 
-    setCurrentPlayer(player) {
+    setCurrentPlayer(player: Player): void {
         this.#currentPlayer = player;
     }
 }

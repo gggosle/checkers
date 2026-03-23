@@ -1,29 +1,29 @@
 export class Player {
-    #id;
-    #name;
-    #color;
-    #moveDir;
+    #id: number;
+    #name: string;
+    #color: string;
+    #moveDir: number;
 
-    constructor(id, name, color, moveDir) {
+    constructor(id: number, name: string, color: string, moveDir: number) {
         this.#id = id;
         this.#name = name;
         this.#color = color;
         this.#moveDir = moveDir;
     }
 
-    get id() {
+    get id(): number {
         return this.#id;
     }
 
-    get name() {
+    get name(): string {
         return this.#name;
     }
 
-    get color() {
+    get color(): string {
         return this.#color;
     }
 
-    get moveDir() {
+    get moveDir(): number {
         return this.#moveDir;
     }
 
@@ -36,7 +36,7 @@ export class Player {
         };
     }
 
-    static fromJSON(json) {
+    static fromJSON(json: { id: number; name: string; color: string; moveDir: number } | null): Player | null {
         if (!json) return null;
         return new Player(json.id, json.name, json.color, json.moveDir);
     }

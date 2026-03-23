@@ -1,16 +1,18 @@
 import {CSS_HISTORY} from "../constants.js";
+import { MoveEntry } from '../models/interfaces';
 
 export class HistoryView {
-    #listElement;
-    #onMoveClick;
+    #listElement: HTMLElement | null;
+    #onMoveClick: (move: MoveEntry | null) => void;
     #selectedIndex = -1;
 
-    constructor(onMoveClick) {
+    constructor(onMoveClick: (move: MoveEntry | null) => void) {
         this.#listElement = document.getElementById(CSS_HISTORY.LIST_ID);
         this.#onMoveClick = onMoveClick;
     }
 
-    render(moveHistory) {
+    render(moveHistory: MoveEntry[]): void {
+        if (!this.#listElement) return;
         this.#listElement.innerHTML = '';
         this.#selectedIndex = -1;
         
@@ -18,13 +20,13 @@ export class HistoryView {
             const li = document.createElement('li');
             li.className = CSS_HISTORY.ITEM_CLASS;
             li.textContent = move.notation;
-            li.dataset.index = index;
+            li.dataset.index = String(index);
             
             li.addEventListener('click', () => {
                 this.#handleMoveClick(index, move);
             });
             
-            this.#listElement.appendChild(li);
+            this.#listElement!.appendChild(li);
         });
         
         const container = this.#listElement.parentElement;
@@ -33,7 +35,8 @@ export class HistoryView {
         }
     }
 
-    #handleMoveClick(index, move) {
+    #handleMoveClick(index: number, move: MoveEntry): void {
+        if (!this.#listElement) return;
         const items = this.#listElement.querySelectorAll(`.${CSS_HISTORY.ITEM_CLASS}`);
         
         if (this.#selectedIndex === index) {

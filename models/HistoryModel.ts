@@ -1,24 +1,25 @@
 import {GAME_CONFIG} from "../constants.js";
 import {MoveType} from "./MoveType.js";
+import { Position, MoveEntry } from './interfaces';
 
 export class HistoryModel {
-    #moveHistory;
+    #moveHistory: MoveEntry[];
 
     constructor() {
         this.#moveHistory = [];
     }
 
-    get moves() {
+    get moves(): MoveEntry[] {
         return [...this.#moveHistory];
     }
 
-    get length() {
+    get length(): number {
         return this.#moveHistory.length;
     }
 
-    addMove(from, to) {
+    addMove(from: Position, to: Position & { type: string }): MoveEntry {
         const notation = this.#generateNotation(from, to);
-        const moveEntry = {
+        const moveEntry: MoveEntry = {
             notation,
             from: {...from},
             to: {row: to.row, col: to.col}
@@ -27,7 +28,7 @@ export class HistoryModel {
         return moveEntry;
     }
 
-    #generateNotation(from, to) {
+    #generateNotation(from: Position, to: Position & { type: string }): string {
         const turnNumber = Math.floor(this.#moveHistory.length / 2) + 1;
         const prefix = `${turnNumber}. `;
         const fromAlg = HistoryModel.toAlgebraic(from.row, from.col);
@@ -36,22 +37,22 @@ export class HistoryModel {
         return `${prefix}${fromAlg}${separator}${toAlg}`;
     }
 
-    static toAlgebraic(row, col) {
+    static toAlgebraic(row: number, col: number): string {
         const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
         const letter = letters[col];
         const rank = GAME_CONFIG.BOARD_SIZE - row;
         return `${letter}${rank}`;
     }
 
-    reset() {
+    reset(): void {
         this.#moveHistory = [];
     }
 
-    restore(moves) {
+    restore(moves: MoveEntry[]): void {
         this.#moveHistory = Array.isArray(moves) ? [...moves] : [];
     }
 
-    toJSON() {
+    toJSON(): MoveEntry[] {
         return [...this.#moveHistory];
     }
 }

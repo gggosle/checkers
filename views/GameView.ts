@@ -1,54 +1,63 @@
 import { Color } from '../models/Color.js';
 import {GAME_CONFIG, CSS_BOARD, CSS_HISTORY} from "../constants.js";
+import { OnCheckerClickCallback, OnCellClickCallback, IsBlackSquareCallback, GetSelectedCheckerInfoCallback, SelectedChecker, Move, MoveEntry } from '../models/interfaces';
+import { Checker } from '../models/Checker.js';
+
+interface DragData {
+    row: number;
+    col: number;
+    element: HTMLElement;
+}
 
 export class GameView {
-    #boardElement;
-    #onCheckerClick;
-    #onCellClick;
+    #boardElement: HTMLElement;
+    #onCheckerClick: OnCheckerClickCallback | null = null;
+    #onCellClick: OnCellClickCallback | null = null;
     #isTransitioning = false;
-    #dragData = null;
-    #getSelectedCheckerInfo = null;
+    #dragData: DragData | null = null;
+    #getSelectedCheckerInfo: GetSelectedCheckerInfoCallback | null = null;
 
-    get isTransitioning() {
+    get isTransitioning(): boolean {
         return this.#isTransitioning;
     }
 
-    constructor(boardElement, getSelectedCheckerInfoCallback) {
+    constructor(boardElement: HTMLElement, getSelectedCheckerInfoCallback: GetSelectedCheckerInfoCallback) {
         this.#boardElement = boardElement;
         this.#getSelectedCheckerInfo = getSelectedCheckerInfoCallback;
         this.#initEvents();
     }
 
-    #initEvents() {
-        this.#boardElement.addEventListener('click', (e) => {
+    #initEvents(): void {
+        this.#boardElement.addEventListener('click', (e: MouseEvent) => {
             if (this.#isTransitioning) return;
             this.#handleBoardClick(e);
         });
 
-        this.#boardElement.addEventListener('mousedown', (e) => {
+        this.#boardElement.addEventListener('mousedown', (e: MouseEvent) => {
             this.#handleMouseDown(e);
         });
 
-        this.#boardElement.addEventListener('dragstart', (e) => {
+        this.#boardElement.addEventListener('dragstart', (e: DragEvent) => {
             this.#handleDragStart(e);
         });
 
-        this.#boardElement.addEventListener('dragover', (e) => {
+        this.#boardElement.addEventListener('dragover', (e: DragEvent) => {
             this.#handleDragOver(e);
         });
 
-        this.#boardElement.addEventListener('drop', (e) => {
+        this.#boardElement.addEventListener('drop', (e: DragEvent) => {
             this.#handleDrop(e);
         });
     }
 
-    #handleMouseDown(e) {
-        const checkerElement = e.target.closest(`.${CSS_BOARD.CHECKER_CLASS}`);
+    #handleMouseDown(e: MouseEvent): void {
+        const checkerElement = (e.target as HTMLElement).closest(`.${CSS_BOARD.CHECKER_CLASS}`);
         if (!checkerElement) return;
 
         const cellElement = checkerElement.parentElement;
-        const row = parseInt(cellElement.dataset.row);
-        const col = parseInt(cellElement.dataset.col);
+        if (!cellElement) return;
+        const row = parseInt((cellElement as HTMLElement).dataset.row || '0');
+        const col = parseInt((cellElement as HTMLElement).dataset.col || '0');
 
         const selectedInfo = this.#getSelectedCheckerInfo ? this.#getSelectedCheckerInfo() : null;
         const isSelected = selectedInfo && selectedInfo.row === row && selectedInfo.col === col;
@@ -58,8 +67,8 @@ export class GameView {
         }
     }
 
-    #handleDragStart(e) {
-        const checkerElement = e.target.closest(`.${CSS_BOARD.CHECKER_CLASS}`);
+    #handleDragStart(e: DragEvent): void {
+        const checkerElement = (e.target as HTMLElement).closest(`.${CSS_BOARD.CHECKER_CLASS}`);
         if (!checkerElement) return;
 
         const selectedInfo = this.#getSelectedCheckerInfo ? this.#getSelectedCheckerInfo() : null;
@@ -69,39 +78,40 @@ export class GameView {
         }
 
         const cellElement = checkerElement.parentElement;
+        if (!cellElement) return;
         this.#dragData = {
-            row: parseInt(cellElement.dataset.row),
-            col: parseInt(cellElement.dataset.col),
-            element: checkerElement
+            row: parseInt((cellElement as HTMLElement).dataset.row || '0'),
+            col: parseInt((cellElement as HTMLElement).dataset.col || '0'),
+            element: checkerElement as HTMLElement
         };
         
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', JSON.stringify(this.#dragData));
+        e.dataTransfer!.effectAllowed = 'move';
+        e.dataTransfer!.setData('text/plain', JSON.stringify(this.#dragData));
     }
 
-    #handleDragOver(e) {
-        const cellElement = e.target.closest(`.${CSS_BOARD.CELL_CLASS}`);
+    #handleDragOver(e: DragEvent): void {
+        const cellElement = (e.target as HTMLElement).closest(`.${CSS_BOARD.CELL_CLASS}`);
         if (!cellElement) return;
         
-        if (cellElement.classList.contains(CSS_BOARD.VALID_MOVE_CLASS)) {
+        if ((cellElement as HTMLElement).classList.contains(CSS_BOARD.VALID_MOVE_CLASS)) {
             e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
+            e.dataTransfer!.dropEffect = 'move';
         }
     }
 
-    #handleDrop(e) {
+    #handleDrop(e: DragEvent): void {
         e.preventDefault();
         
         if (!this.#dragData) return;
 
-        const cellElement = e.target.closest(`.${CSS_BOARD.CELL_CLASS}`);
-        if (!cellElement || !cellElement.classList.contains(CSS_BOARD.VALID_MOVE_CLASS)) {
+        const cellElement = (e.target as HTMLElement).closest(`.${CSS_BOARD.CELL_CLASS}`);
+        if (!cellElement || !(cellElement as HTMLElement).classList.contains(CSS_BOARD.VALID_MOVE_CLASS)) {
             this.#dragData = null;
             return;
         }
 
-        const targetRow = parseInt(cellElement.dataset.row);
-        const targetCol = parseInt(cellElement.dataset.col);
+        const targetRow = parseInt((cellElement as HTMLElement).dataset.row || '0');
+        const targetCol = parseInt((cellElement as HTMLElement).dataset.col || '0');
 
         if (this.#onCellClick) {
             this.#onCellClick(targetRow, targetCol);
@@ -110,40 +120,42 @@ export class GameView {
         this.#dragData = null;
     }
 
-    #handleBoardClick(e) {
-        const cellElement = e.target.closest(`.${CSS_BOARD.CELL_CLASS}`);
-        if (this.#isValidCellClick(cellElement)) {
-            this.#handleCellClickEvent(cellElement);
+    #handleBoardClick(e: MouseEvent): void {
+        const cellElement = (e.target as HTMLElement).closest(`.${CSS_BOARD.CELL_CLASS}`);
+        if (this.#isValidCellClick(cellElement as HTMLElement)) {
+            this.#handleCellClickEvent(cellElement as HTMLElement);
         }
     }
 
-    #isValidCellClick(cellElement) {
-        return cellElement && this.#onCellClick && cellElement.classList.contains(CSS_BOARD.VALID_MOVE_CLASS);
+    #isValidCellClick(cellElement: HTMLElement | null): boolean {
+        return cellElement !== null && this.#onCellClick !== null && (cellElement as HTMLElement).classList.contains(CSS_BOARD.VALID_MOVE_CLASS);
     }
 
-    #handleCellClickEvent(cellElement) {
-        const row = parseInt(cellElement.dataset.row);
-        const col = parseInt(cellElement.dataset.col);
+    #handleCellClickEvent(cellElement: HTMLElement): void {
+        const row = parseInt(cellElement.dataset.row || '0');
+        const col = parseInt(cellElement.dataset.col || '0');
         
-        this.#onCellClick(row, col);
+        if (this.#onCellClick) {
+            this.#onCellClick(row, col);
+        }
     }
 
-    animateMove(from, to, onComplete) {
+    animateMove(from: SelectedChecker, to: SelectedChecker, onComplete: (() => void) | undefined): void {
         const checkerElement = this.#boardElement.querySelector(`.cell[data-row="${from.row}"][data-col="${from.col}"] .${CSS_BOARD.CHECKER_CLASS}`);
         const targetCell = this.#boardElement.querySelector(`.cell[data-row="${to.row}"][data-col="${to.col}"]`);
 
         if (checkerElement && targetCell) {
-            this.animatePieceMove(checkerElement, targetCell, onComplete);
+            this.animatePieceMove(checkerElement as HTMLElement, targetCell as HTMLElement, onComplete);
         } else {
             if (onComplete) onComplete();
         }
     }
 
-    animatePieceMove(checkerElement, targetCell, onComplete) {
+    animatePieceMove(checkerElement: HTMLElement, targetCell: HTMLElement, onComplete: (() => void) | undefined): void {
         this.#animate(checkerElement, targetCell, onComplete);
     }
 
-    #animate(checkerElement, targetCell, onComplete) {
+    #animate(checkerElement: HTMLElement, targetCell: HTMLElement, onComplete: (() => void) | undefined): void {
         this.#isTransitioning = true;
         const delta = this.#calculateDelta(checkerElement, targetCell);
         
@@ -160,7 +172,7 @@ export class GameView {
         }, { once: true });
     }
 
-    #calculateDelta(checkerElement, targetCell) {
+    #calculateDelta(checkerElement: HTMLElement, targetCell: HTMLElement): { x: number; y: number } {
         const startRect = checkerElement.getBoundingClientRect();
         const endRect = targetCell.getBoundingClientRect();
         
@@ -170,8 +182,7 @@ export class GameView {
         };
     }
 
-
-    render(board, isBlackSquareCallback, onCheckerClickCallback, onCellClickCallback) {
+    render(board: (Checker | null)[][], isBlackSquareCallback: IsBlackSquareCallback, onCheckerClickCallback: OnCheckerClickCallback, onCellClickCallback: OnCellClickCallback): void {
         this.#onCheckerClick = onCheckerClickCallback;
         this.#onCellClick = onCellClickCallback;
         this.#boardElement.replaceChildren();
@@ -188,7 +199,7 @@ export class GameView {
         this.#boardElement.appendChild(fragment);
     }
 
-    #createCellAndPiece(checkerData, r, c, isBlack) {
+    #createCellAndPiece(checkerData: Checker | null, r: number, c: number, isBlack: boolean): HTMLElement {
         const cell = this.#createCellElement(r, c, isBlack);
         if (checkerData) {
             const checkerElement = this.#createCheckerElement(checkerData);
@@ -197,16 +208,16 @@ export class GameView {
         return cell;
     }
 
-    #createCellElement(row, col, isBlack) {
+    #createCellElement(row: number, col: number, isBlack: boolean): HTMLElement {
         const cell = document.createElement('div');
         cell.classList.add(CSS_BOARD.CELL_CLASS);
         cell.classList.add(isBlack ? CSS_BOARD.BLACK_CELL_CLASS : CSS_BOARD.WHITE_CELL_CLASS);
-        cell.dataset.row = row;
-        cell.dataset.col = col;
+        cell.dataset.row = String(row);
+        cell.dataset.col = String(col);
         return cell;
     }
 
-    #createCheckerElement(checkerData) {
+    #createCheckerElement(checkerData: Checker): HTMLElement {
         const checker = document.createElement('div');
         checker.classList.add(CSS_BOARD.CHECKER_CLASS);
         checker.classList.add(checkerData.color === Color.WHITE ? CSS_BOARD.PLAYER_1_CHECKER_CLASS : CSS_BOARD.PLAYER_2_CHECKER_CLASS);
@@ -217,7 +228,7 @@ export class GameView {
         return checker;
     }
 
-    highlightMoves(checkerCoords, validMoves) {
+    highlightMoves(checkerCoords: SelectedChecker, validMoves: Move[]): void {
         this.clearHighlights();
         
         const checkerElement = this.#boardElement.querySelector(`.cell[data-row="${checkerCoords.row}"][data-col="${checkerCoords.col}"] .${CSS_BOARD.CHECKER_CLASS}`);
@@ -233,13 +244,13 @@ export class GameView {
         });
     }
 
-    clearHighlights() {
+    clearHighlights(): void {
         this.#boardElement.querySelectorAll(`.${CSS_BOARD.HIGHLIGHT_CLASS}`).forEach(c => c.classList.remove(CSS_BOARD.HIGHLIGHT_CLASS));
         this.#boardElement.querySelectorAll(`.${CSS_BOARD.VALID_MOVE_CLASS}`).forEach(c => c.classList.remove(CSS_BOARD.VALID_MOVE_CLASS));
         this.clearHistoryHighlights();
     }
 
-    highlightHistoryMove(move) {
+    highlightHistoryMove(move: MoveEntry | undefined): void {
         this.clearHistoryHighlights();
         if (!move) return;
 
@@ -250,7 +261,7 @@ export class GameView {
         if (toCell) toCell.classList.add(CSS_HISTORY.HIGHLIGHT_CLASS);
     }
 
-    setCursor(row, col) {
+    setCursor(row: number, col: number): void {
         this.clearCursor();
         const cell = this.#boardElement.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
         if (cell) {
@@ -258,15 +269,15 @@ export class GameView {
         }
     }
 
-    clearCursor() {
+    clearCursor(): void {
         this.#boardElement.querySelectorAll(`.${CSS_BOARD.CURSOR_CLASS}`).forEach(c => c.classList.remove(CSS_BOARD.CURSOR_CLASS));
     }
 
-    clearHistoryHighlights() {
+    clearHistoryHighlights(): void {
         this.#boardElement.querySelectorAll(`.${CSS_HISTORY.HIGHLIGHT_CLASS}`).forEach(c => c.classList.remove(CSS_HISTORY.HIGHLIGHT_CLASS));
     }
 
-    animateUndoMove(from, to, onComplete) {
+    animateUndoMove(from: SelectedChecker, to: SelectedChecker, onComplete: (() => void) | undefined): void {
         const checkerElement = this.#boardElement.querySelector(`.cell[data-row="${to.row}"][data-col="${to.col}"] .${CSS_BOARD.CHECKER_CLASS}`);
         const targetCell = this.#boardElement.querySelector(`.cell[data-row="${from.row}"][data-col="${from.col}"]`);
         
@@ -275,6 +286,6 @@ export class GameView {
             return;
         }
 
-        this.#animate(checkerElement, targetCell, onComplete);
+        this.#animate(checkerElement as HTMLElement, targetCell as HTMLElement, onComplete);
     }
 }
