@@ -1,1 +1,4 @@
 .idea/
+.planning/
+node_modules/
+.env
